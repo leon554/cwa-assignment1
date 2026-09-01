@@ -1,3 +1,4 @@
+import HealthCheck from "@/components/settings/HealthCheck";
 import SettingsForm from "@/components/settings/SettingsForm";
 import { getLayoutFromCookie, getThemeFromCookie } from "@/lib/cookies";
 import { LAYOUT_COOKIE, THEME_COOKIE } from "@/types/settings";
@@ -16,6 +17,7 @@ export default async function SettingsPage() {
       </p>
       <div className="rounded-xl border border-card-border bg-card p-6 shadow-sm">
         <SettingsForm initialTheme={theme} initialLayout={layout} />
+        <HealthCheck/>
       </div>
     </div>
   );
