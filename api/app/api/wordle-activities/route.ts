@@ -1,21 +1,27 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { createNextResErr, status } from "@/lib/api-utils";
+import { validateWordleCreation } from "@/lib/api/validation";
 
 export async function GET() {
-  const activities = await prisma.wordleActivity.findMany({ include: { word: true } });
-  return NextResponse.json(activities);
+  const activities = await prisma.wordleActivity.findMany({
+    include: { word: true },
+    orderBy: { createdAt: "desc" },
+  });
+  return NextResponse.json(activities, status());
 }
 
 export async function POST(request: Request) {
   const body = await request.json();
 
-  if (!body.wordId || typeof body.wordId !== "number") {
-    return NextResponse.json({ error: "wordId is required" }, { status: 400 });
+  const validationResult = validateWordleCreation(body)
+  if(!validationResult.success){
+    return NextResponse.json(validationResult.body, validationResult.status)
   }
 
   const wordExists = await prisma.phonemeWord.findUnique({ where: { id: body.wordId } });
   if (!wordExists) {
-    return NextResponse.json({ error: "Selected word does not exist" }, { status: 400 });
+    return createNextResErr("Selected word does not exist");
   }
 
   const activity = await prisma.wordleActivity.create({
@@ -26,5 +32,5 @@ export async function POST(request: Request) {
     },
     include: { word: true },
   });
-  return NextResponse.json(activity, { status: 201 });
+  return NextResponse.json(activity, status(201));
 }
