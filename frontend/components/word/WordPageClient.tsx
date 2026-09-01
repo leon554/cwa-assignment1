@@ -6,6 +6,7 @@ import WordlePreview from "@/components/wordle/WordlePreview";
 import { DEFAULT_WORDLE_WORD } from "@/lib/phoneme-words";
 import type { WordleConfig } from "@/lib/wordle/types";
 import { useState } from "react";
+import WordManager from "./WordManager";
 
 const initialConfig: WordleConfig = {
   targetPhonemes: DEFAULT_WORDLE_WORD.phonemes,
@@ -15,12 +16,11 @@ const initialConfig: WordleConfig = {
 };
 
 export default function WordPageClient() {
-  const [config, setConfig] = useState<WordleConfig>(initialConfig);
 
   return (
     <BuilderLayout
       title="Phoneme Word Manager"
-      section1={<WordleBuilder onConfigChange={setConfig} />}
+      section1={<WordManager />}
     />
   );
 }
