@@ -6,9 +6,41 @@ datasource db {
   provider = "postgresql"
 }
 
-model Post {
-  id        Int      @id @default(autoincrement())
-  title     String
-  content   String?
-  createdAt DateTime @default(now())
+model PhonemeWord {
+  id               Int                  @id @default(autoincrement())
+  englishWord      String
+  phonemes         String[]
+  wordLists        PhonemeWordList[]
+  wordleActivities WordleActivity[]
+}
+
+model PhonemeWordList {
+  id                   Int                  @id @default(autoincrement())
+  name                 String
+  words                PhonemeWord[]
+  wordSearchActivities WordSearchActivity[]
+}
+
+model WordleActivity {
+  id               Int         @id @default(autoincrement())
+  word             PhonemeWord @relation(fields: [wordId], references: [id])
+  wordId           Int
+  maxGuesses       Int         @default(6)
+  showEnglishWord  Boolean?
+  createdAt        DateTime    @default(now())
+}
+
+model WordSearchActivity {
+  id          Int             @id @default(autoincrement())
+  wordList    PhonemeWordList @relation(fields: [wordListId], references: [id])
+  wordListId  Int
+  gridWidth   Int             @default(15)
+  gridHeight  Int             @default(15)
+  createdAt   DateTime        @default(now())
+}
+
+model GlobalSettings {
+  id      Int    @id @default(1) 
+  theme   String @default("dark")
+  layout  String @default("comfortable")
 }
