@@ -5,6 +5,7 @@ const NAV_LINKS = [
   { href: "/wordle", label: "Wordle" },
   { href: "/word-search", label: "Word Search" },
   { href: "/about", label: "About" },
+  { href: "/word", label: "Manage Words" },
   { href: "/settings", label: "Settings" },
 ];
 

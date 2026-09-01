@@ -31,13 +31,13 @@ export default function WordSearchPageClient() {
   return (
     <BuilderLayout
       title="Phoneme Word Search Builder"
-      config={
+      section1={
         <WordSearchBuilder
           onPuzzleChange={handlePuzzleChange}
           onShowAnswersChange={setShowAnswers}
         />
       }
-      preview={
+      section2={
         <WordSearchPreview
           key={puzzleKey}
           puzzle={puzzle}

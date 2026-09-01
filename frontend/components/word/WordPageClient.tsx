@@ -14,14 +14,13 @@ const initialConfig: WordleConfig = {
   showEnglishOnWin: true,
 };
 
-export default function WordlePageClient() {
+export default function WordPageClient() {
   const [config, setConfig] = useState<WordleConfig>(initialConfig);
 
   return (
     <BuilderLayout
-      title="Phoneme Wordle Builder"
+      title="Phoneme Word Manager"
       section1={<WordleBuilder onConfigChange={setConfig} />}
-      section2={<WordlePreview key={`${config.englishWord}-${config.maxGuesses}`} config={config} />}
     />
   );
 }
