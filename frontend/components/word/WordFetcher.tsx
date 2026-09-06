@@ -4,25 +4,21 @@ import { useEffect, useState } from "react";
 import { deletePhonemeWord, getPhonemeWords } from "@/service/api-service";
 import { PhonemeWord} from "@/types/api-types";
 import { ApiError } from "@/service/api-service";
+import { useWords } from "@/providers/WordsContext";
 
-interface Props{
-    loading: boolean,
-    setLoading: (loading: boolean) => void
-    update: number
-    setUpdate: (num: number) => void
-    words: PhonemeWord[],
-}
-export default function WordFetcher({loading, setLoading, update, setUpdate, words} : Props) {
+
+export default function WordFetcher() {
+    const WC = useWords()
     
     async function deleteWord(id: number){
-        setLoading(true)
+        WC.setLoading(true)
         try {
             await deletePhonemeWord(id)
-            setUpdate(Math.random())
+            WC.refreshWords()
         } catch (error) {
             if (error instanceof ApiError) alert(error.message);
         }
-        setLoading(false)
+        WC.setLoading(false)
     }
 
     return (
@@ -31,12 +27,12 @@ export default function WordFetcher({loading, setLoading, update, setUpdate, wor
                 Word List
             </h3>
             <div>
-                {loading ? 
+                {WC.loading ? 
                 <p className="animate-pulse"> 
                     Loading...
-                </p> : words.length != 0 ? 
+                </p> : WC.words.length != 0 ? 
                 <div className="flex gap-4 flex-wrap">
-                    {words.map((w, i) => {
+                    {WC.words.map((w, i) => {
                         return(
                             <p key={i} className="border px-2 rounded-md border-card-border hover:cursor-default">
                                 {w.phonemes} - {w.englishWord} 

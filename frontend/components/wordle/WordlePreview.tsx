@@ -64,6 +64,9 @@ export default function WordlePreview({ config }: WordlePreviewProps) {
 
   return (
     <div className="flex flex-col items-center gap-6">
+      <h3 className="mb-2 w-full text-sm font-semibold tracking-wide text-muted">
+        PREVIEW
+      </h3>
       {status === "won" && (
         <div
           role="status"

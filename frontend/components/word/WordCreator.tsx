@@ -7,19 +7,16 @@ import { createPhonemeWord, updatePhonemeWord } from "@/service/api-service";
 import { ApiError } from "@/service/api-service";
 import LabeledSelect from "../shared/LabeledSelect";
 import { PhonemeWord } from "@/types/api-types";
+import { useWords } from "@/providers/WordsContext";
 
-interface Props{
-    loading: boolean
-    setLoading: (laoding: boolean) => void
-    setUpdate: (num: number) => void
-    words: PhonemeWord[],
-}
 
-export default function WordCreator({loading, setLoading, setUpdate, words}: Props) {
+export default function WordCreator() {
     const [englishWord, setEnglishWord] = useState("")
     const [phonemes, setPhonemes] = useState("")
     const [create, setCreate] = useState(true)
     const [selectedWord, setSelectedWord] = useState<null | PhonemeWord>(null)
+
+    const WC = useWords()
 
     useEffect(() => {
         if(create || !selectedWord) return
@@ -34,17 +31,17 @@ export default function WordCreator({loading, setLoading, setUpdate, words}: Pro
             return
         }
 
-        setLoading(true)
+        WC.setLoading(true)
         try {
             await createPhonemeWord({
                 englishWord,
                 phonemes: phonemes.split("")
             })
-            setUpdate(Math.random())
+            WC.refreshWords()
         } catch (error) {
             if (error instanceof ApiError) alert(error.message);
         }
-        setLoading(false)
+        WC.setLoading(false)
     }
 
      async function updateWord(){
@@ -53,7 +50,7 @@ export default function WordCreator({loading, setLoading, setUpdate, words}: Pro
             return
         }
 
-        setLoading(true)
+        WC.setLoading(true)
         try {
             await updatePhonemeWord(
                 selectedWord!.id,
@@ -62,11 +59,11 @@ export default function WordCreator({loading, setLoading, setUpdate, words}: Pro
                     phonemes: phonemes.split("")
                 }
             )
-            setUpdate(Math.random())
+            WC.refreshWords()
         } catch (error) {
             if (error instanceof ApiError) alert(error.message);
         }
-        setLoading(false)
+        WC.setLoading(false)
     }
 
     return (
@@ -92,7 +89,7 @@ export default function WordCreator({loading, setLoading, setUpdate, words}: Pro
                         label="Select Word To Update"
                         value={selectedWord ? JSON.stringify(selectedWord) : ""}
                         onChange={(value) => setSelectedWord(JSON.parse(value))}
-                        options={words.map(w => ({
+                        options={WC.words.map(w => ({
                             value: JSON.stringify(w),
                             label: `${w.phonemes.join("")} - ${w.englishWord}`
                         }))}

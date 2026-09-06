@@ -7,31 +7,14 @@ import WordCreator from "./WordCreator";
 import WordFetcher from "./WordFetcher";
 import { PhonemeWordList } from "@/types/api-types";
 
-interface Props{
-    loading: boolean,
-    setLoading: (loading: boolean) => void
-    update: number
-    setUpdate: (num: number) => void
-    words: PhonemeWord[],
-}
-export default function WordManager({loading, setLoading, update, setUpdate, words} : Props) {
+
+export default function WordManager() {
 
     return (
         <div className="flex flex-col gap-5">
-            <WordFetcher 
-                loading={loading} 
-                setLoading={setLoading} 
-                update={update} 
-                setUpdate={setUpdate}
-                words={words}
-            />
+            <WordFetcher/>
             <hr className="text-muted"/>
-            <WordCreator 
-                loading={loading} 
-                setLoading={setLoading} 
-                setUpdate={setUpdate}
-                words={words}
-            />
+            <WordCreator/>
         </div>
     )
 }

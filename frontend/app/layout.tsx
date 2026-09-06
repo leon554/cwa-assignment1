@@ -6,6 +6,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Footer from "@/components/layout/Footer";
 import Header from "@/components/layout/Header";
 import "./globals.css";
+import { WordsProvider } from "@/providers/WordsContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,7 +41,9 @@ export default async function RootLayout({
     >
       <body className="flex min-h-full flex-col bg-background text-foreground">
         <Header />
-        <main className="flex flex-1 flex-col">{children}</main>
+        <WordsProvider>
+         <main className="flex flex-1 flex-col">{children}</main>
+        </WordsProvider>
         <Footer />
       </body>
     </html>
