@@ -11,25 +11,9 @@ interface Props{
     update: number
     setUpdate: (num: number) => void
     words: PhonemeWord[],
-    setWords: (words: PhonemeWord[]) => void
 }
-export default function WordFetcher({loading, setLoading, update, setUpdate, words, setWords} : Props) {
+export default function WordFetcher({loading, setLoading, update, setUpdate, words} : Props) {
     
-
-    useEffect(() => {
-        const run = async () => {
-            setLoading(true)
-            try {
-                const words = await getPhonemeWords()
-                setWords(words)
-            } catch (error) {
-                if (error instanceof ApiError) alert(error.message);
-            }
-            setLoading(false)
-        }
-        run()
-    }, [update])
-
     async function deleteWord(id: number){
         setLoading(true)
         try {

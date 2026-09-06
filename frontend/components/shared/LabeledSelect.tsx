@@ -11,6 +11,7 @@ type LabeledSelectProps = {
   value: string | number;
   onChange: (value: string) => void;
   options: LabeledSelectOption[];
+  placeholder?: string;
   className?: string;
 };
 
@@ -20,10 +21,11 @@ export default function LabeledSelect({
   value,
   onChange,
   options,
+  placeholder = "Select an option",
   className = "",
 }: LabeledSelectProps) {
   const isValidValue = options.some((option) => option.value === value);
-  const resolvedValue = isValidValue ? value : options[0]?.value ?? "";
+  const resolvedValue = isValidValue ? value : "";
 
   return (
     <div className={className}>
@@ -36,8 +38,15 @@ export default function LabeledSelect({
         onChange={(e) => onChange(e.target.value)}
         className="w-full rounded-md border border-card-border bg-background px-3 py-2 text-sm"
       >
+        <option value="" disabled hidden>
+          {placeholder}
+        </option>
         {options.map((option) => (
-          <option key={option.value} value={option.value}>
+          <option
+            key={option.value}
+            value={option.value}
+            onClick={() => onChange(String(option.value))}
+          >
             {option.label}
           </option>
         ))}

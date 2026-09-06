@@ -5,11 +5,16 @@ import { PhonemeWord } from "@/types/api-types";
 import { useEffect, useState } from "react";
 import WordCreator from "./WordCreator";
 import WordFetcher from "./WordFetcher";
+import { PhonemeWordList } from "@/types/api-types";
 
-export default function WordManager() {
-    const [loading, setLoading] = useState(false)
-    const [update, setUpdate] = useState(0)
-    const [words, setWords] = useState<PhonemeWord[]>([])
+interface Props{
+    loading: boolean,
+    setLoading: (loading: boolean) => void
+    update: number
+    setUpdate: (num: number) => void
+    words: PhonemeWord[],
+}
+export default function WordManager({loading, setLoading, update, setUpdate, words} : Props) {
 
     return (
         <div className="flex flex-col gap-5">
@@ -19,7 +24,6 @@ export default function WordManager() {
                 update={update} 
                 setUpdate={setUpdate}
                 words={words}
-                setWords={setWords}
             />
             <hr className="text-muted"/>
             <WordCreator 
