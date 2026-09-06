@@ -1,4 +1,4 @@
-FROM node:20-alpine
+FROM node:22-alpine
 
 WORKDIR /app
 
@@ -9,4 +9,4 @@ COPY . .
 RUN npx prisma generate
 
 EXPOSE 80
-CMD ["npm", "run", "dev"]
+CMD ["sh", "-c", "npx prisma db push && npm run dev"]

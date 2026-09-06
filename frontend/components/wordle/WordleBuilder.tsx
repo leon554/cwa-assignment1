@@ -7,6 +7,7 @@ import { generateWordleHtml } from "@/lib/html-export/wordle-template";
 import { WORDLE_PRESETS } from "@/lib/phoneme-words";
 import type { WordleConfig } from "@/lib/wordle/types";
 import { useState } from "react";
+import LabeledInput from "../shared/LabeledInput";
 
 type WordleBuilderProps = {
   onConfigChange: (config: WordleConfig) => void;
@@ -86,20 +87,12 @@ export default function WordleBuilder({ onConfigChange }: WordleBuilderProps) {
         english={selectedWord.english}
       />
 
-      <div>
-        <label htmlFor="max-guesses" className="mb-1 block text-sm font-medium">
-          Max guesses
-        </label>
-        <input
-          id="max-guesses"
-          type="number"
-          min={3}
-          max={10}
-          value={maxGuesses}
-          onChange={(e) => handleGuessesChange(Number(e.target.value))}
-          className="w-full rounded-md border border-card-border bg-background px-3 py-2 text-sm"
-        />
-      </div>
+      <LabeledInput
+        type="number"
+        title="Max Guesses"
+        value={`${maxGuesses}`}
+        setValue={v => handleGuessesChange(Number(v))}
+      />
 
       <label className="flex items-center gap-2 text-sm">
         <input
