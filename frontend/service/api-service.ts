@@ -19,7 +19,10 @@ import {
 
 } from "@/types/api-types";
 
-const API_BASE = `${process.env.NEXT_PUBLIC_API_URL}/api`;
+const API_BASE =
+  (typeof window === "undefined"
+    ? process.env.INTERNAL_API_URL ?? "http://api:3000"
+    : process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:80") + "/api";
 const HEALTH_URL = `${process.env.NEXT_PUBLIC_API_URL}/health`;
 
 export class ApiError extends Error {

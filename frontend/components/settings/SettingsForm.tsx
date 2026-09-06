@@ -1,30 +1,24 @@
 "use client";
 
-import { setLayoutCookie, setThemeCookie } from "@/lib/cookies";
+import { getGlobalSettings, updateGlobalSettings } from "@/service/api-service";
 import type { LayoutPreference, Theme } from "@/types/settings";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { ApiError } from "@/service/api-service";
+import { useSettings } from "@/hooks/useSettings";
 
-type SettingsFormProps = {
-  initialTheme: Theme;
-  initialLayout: LayoutPreference;
-};
-
-export default function SettingsForm({initialTheme, initialLayout}: SettingsFormProps) {
+export default function SettingsForm() {
   const router = useRouter();
-  const [theme, setTheme] = useState<Theme>(initialTheme);
-  const [layout, setLayout] = useState<LayoutPreference>(initialLayout);
+  const {theme, layout, setSettings, refreshSettings} = useSettings()
 
-  function applyTheme(next: Theme) {
-    setTheme(next);
-    setThemeCookie(next);
+  async function applyTheme(next: Theme) {
+    await setSettings({theme: next})
     document.documentElement.classList.toggle("dark", next === "dark");
     router.refresh();
   }
 
-  function applyLayout(next: LayoutPreference) {
-    setLayout(next);
-    setLayoutCookie(next);
+  async function applyLayout(next: LayoutPreference) {
+    await setSettings({layout: next})
     document.documentElement.setAttribute("data-layout", next);
     router.refresh();
   }
