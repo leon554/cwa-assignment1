@@ -32,7 +32,14 @@ Then open:
 - Builder UI: http://localhost:3000
 - Health check: http://localhost:80/health
 
-The API container runs `prisma db push` on start, so the schema is applied to a fresh database automatically.
+The API container runs `prisma migrate deploy` on start, so committed migrations are applied to the database automatically.
+
+If you previously ran the stack with `db push` and migrations fail on an old volume, reset once then rebuild:
+
+```bash
+docker compose down -v
+docker compose up --build
+```
 
 ### Running without Docker
 
@@ -61,8 +68,8 @@ Defined in [api/prisma/schema.prisma](api/prisma/schema.prisma).
 
 - **PhonemeWord** — an English word plus its phonemes, stored as `String[]`. Using an array rather than a single string is what allows multi-character symbols such as `tʃ`, `dʒ`, and `ʉː` to stay intact as one unit.
 - **PhonemeWordList** — a named collection of words, many-to-many with `PhonemeWord`. Drives Word Search activities.
-- **WordleActivity** — a saved Wordle configuration: target word, max guesses, and whether to reveal the English word on a win.
-- **WordSearchActivity** — a saved Word Search configuration: word list plus grid width and height.
+- **WordleActivity** — a named Wordle configuration: target word, max guesses, and whether to reveal the English word on a win. `name` defaults to `Untitled Wordle` for backfilled rows.
+- **WordSearchActivity** — a named Word Search configuration: word list plus grid width and height. `name` defaults to `Untitled Word Search` for backfilled rows.
 - **GlobalSettings** — a single row holding the theme and layout preference.
 
 Both activity models can be stored many times over, so a teacher can keep multiple configurations side by side.
@@ -101,8 +108,8 @@ Validation lives in [api/lib/api/validation.ts](api/lib/api/validation.ts) and e
 
 1. On `/word`, enter an English word and tap its phonemes on the phoneme keyboard, then save it.
 2. Group words into a named word list on the same page.
-3. On `/wordle`, pick a saved word and its settings, then save the activity.
-4. On `/word-search`, pick a saved word list and grid size, then save the activity.
+3. On `/wordle`, give the activity a name, pick a saved word and its settings, then save it.
+4. On `/word-search`, give the activity a name, pick a saved word list and grid size, then save it.
 5. Load a saved activity to play the live preview, then generate the downloadable HTML file.
 
 ## Project layout

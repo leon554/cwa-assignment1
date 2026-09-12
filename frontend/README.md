@@ -33,7 +33,7 @@ components/
   phoneme/               Phoneme keyboard and word display
   word/ wordlist/        Word and word list CRUD
   wordle/ wordsearch/    Activity CRUD, builders, previews
-  shared/                Reusable inputs, buttons, layout
+  shared/                Reusable inputs, layout, Spinner, DeleteButton, ActionButton, LoadingRow
   settings/              Theme, layout, health check
 lib/
   wordle/                Guess evaluation and config types
@@ -53,7 +53,7 @@ Every server interaction goes through `service/api-service.ts`. No component cal
 Components follow a consistent trio per entity:
 
 - **Fetcher** — renders the list, owns a local `deletingId` so only the row being removed shows a spinner.
-- **Creator** — a create/update form that owns a local `saving` flag for its button.
+- **Creator** — a create/update form that owns a local `saving` flag for its button. In Update mode with an empty collection, the form is hidden and a short message explains that something must be created first.
 - **Manager** — stacks the fetcher above the creator.
 
 Reads are owned by the provider; writes are owned by the component performing them. After a successful write the component calls the matching `refresh` function and the provider refetches.

@@ -57,12 +57,14 @@ It returns `200` when the database is reachable and `503` with `{ "status": "err
 
 Phonemes are stored as `String[]` on `PhonemeWord`, not as a single concatenated string. This is deliberate: many HCE phoneme symbols occupy more than one character (`tʃ`, `dʒ`, `ʉː`), so a character-level representation would split them and corrupt both the Wordle tiles and the Word Search grid cells.
 
+`WordleActivity` and `WordSearchActivity` each have a required `name` so saved configurations are identifiable in the UI. Column defaults (`Untitled Wordle` / `Untitled Word Search`) exist so migrations can backfill older rows; create requests still require a non-empty name.
+
 ## Prisma commands
 
 ```bash
 npx prisma generate          # regenerate the client after editing the schema
 npx prisma migrate dev       # create and apply a migration in development
-npx prisma migrate deploy    # apply existing migrations
-npx prisma db push           # sync the schema without a migration (used by the Dockerfile)
+npx prisma migrate deploy    # apply existing migrations (used by the Dockerfile)
+npx prisma db push           # optional local shortcut to sync the schema without a migration
 npx prisma studio            # browse the data
 ```
