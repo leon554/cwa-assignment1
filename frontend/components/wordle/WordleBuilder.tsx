@@ -2,7 +2,7 @@
 
 import PhonemeWordDisplay from "@/components/phoneme/PhonemeWordDisplay";
 import GenerateButton from "@/components/shared/GenerateButton";
-import { downloadHtmlFile } from "@/lib/html-export/download";
+import { downloadHtmlFile, slugify } from "@/lib/html-export/download";
 import { generateWordleHtml } from "@/lib/html-export/wordle-template";
 import { activityToWordleConfig } from "@/lib/wordle/types";
 import type { WordleActivity } from "@/types/api-types";
@@ -16,7 +16,7 @@ export default function WordleBuilder({ activity }: WordleBuilderProps) {
     if (!activity) return;
     const config = activityToWordleConfig(activity);
     const html = generateWordleHtml(config);
-    downloadHtmlFile(html, `phoneme-wordle-${config.englishWord}.html`);
+    downloadHtmlFile(html, `${slugify(activity.name, "phoneme-wordle")}.html`);
   }
 
   if (!activity) {
@@ -37,6 +37,8 @@ export default function WordleBuilder({ activity }: WordleBuilderProps) {
       <h3 className="text-sm font-semibold tracking-wide text-muted">
         Selected Activity
       </h3>
+
+      <p className="text-lg font-semibold">{activity.name}</p>
 
       <PhonemeWordDisplay
         phonemes={activity.word.phonemes}

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
+import type { RequestBody } from "@/lib/api/types";
 
 export function parseId(raw: string): number | null {
   const id = Number(raw);
@@ -23,6 +24,18 @@ export function handlePrismaError(error: unknown, entityName: string) {
 
 export function createNextResErr(error: string, status: number = 400) {
   return NextResponse.json({ error }, { status });
+}
+
+// Returns null when the body is absent or not valid JSON, so handlers can answer
+// with a 400 instead of letting request.json() throw into an unhandled 500.
+export async function readJsonBody(request: Request): Promise<RequestBody | null> {
+  try {
+    const body = await request.json();
+    if (body === null || typeof body !== "object" || Array.isArray(body)) return null;
+    return body as RequestBody;
+  } catch {
+    return null;
+  }
 }
 
 export function status(status: number = 200){

@@ -9,6 +9,7 @@ import { WordSearchActivity } from "@/types/api-types";
 import { useWords } from "@/providers/WordsContext";
 
 export default function WordSearchActivityCreator() {
+    const [name, setName] = useState("");
     const [wordListId, setWordListId] = useState<number | null>(null);
     const [gridWidth, setGridWidth] = useState("10");
     const [gridHeight, setGridHeight] = useState("10");
@@ -23,12 +24,17 @@ export default function WordSearchActivityCreator() {
 
     useEffect(() => {
         if (create || !selectedActivity) return;
+        setName(selectedActivity.name);
         setWordListId(selectedActivity.wordListId);
         setGridWidth(`${selectedActivity.gridWidth}`);
         setGridHeight(`${selectedActivity.gridHeight}`);
     }, [selectedActivity]);
 
     function validate() {
+        if (!name.trim()) {
+            alert("Give the activity a name");
+            return false;
+        }
         if (!wordListId) {
             alert("Select a word list for the activity");
             return false;
@@ -54,11 +60,13 @@ export default function WordSearchActivityCreator() {
         setSaving(true);
         try {
             await createWordSearchActivity({
+                name: name.trim(),
                 wordListId: wordListId!,
                 gridWidth: Number(gridWidth),
                 gridHeight: Number(gridHeight),
             });
             WC.refreshWordSearchActivities();
+            setName("");
             setWordListId(null);
         } catch (error) {
             if (error instanceof ApiError) alert(error.message);
@@ -76,6 +84,7 @@ export default function WordSearchActivityCreator() {
         setSaving(true);
         try {
             await updateWordSearchActivity(selectedActivity.id, {
+                name: name.trim(),
                 wordListId: wordListId!,
                 gridWidth: Number(gridWidth),
                 gridHeight: Number(gridHeight),
@@ -90,7 +99,7 @@ export default function WordSearchActivityCreator() {
     return (
         <div>
             <h3 className="mb-2 text-sm font-semibold tracking-wide text-muted">
-                Create New Word Search Activity
+                {create ? "Create New Word Search Activity" : "Update Existing Word Search Activity"}
             </h3>
             <div className="flex flex-col gap-3">
                 <LabeledSelect
@@ -115,10 +124,17 @@ export default function WordSearchActivityCreator() {
                         }}
                         options={WC.wordSearchActivities.map((a) => ({
                             value: a.id,
-                            label: `${a.wordList.name} (${a.gridWidth} x ${a.gridHeight})`,
+                            label: a.name,
                         }))}
                     />
                 )}
+
+                <LabeledInput
+                    type="text"
+                    title="Activity Name"
+                    value={name}
+                    setValue={(v) => setName(v)}
+                />
 
                 {WC.wordLists.length === 0 ? (
                     <p className="text-sm text-muted">

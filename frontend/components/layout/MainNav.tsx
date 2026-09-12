@@ -9,6 +9,13 @@ const NAV_LINKS = [
   { href: "/settings", label: "Settings" },
 ];
 
+// Matching on `href + "/"` rather than a bare prefix keeps sibling routes such as
+// /word and /word-search from both counting as active.
+function isActiveNavLink(pathname: string, href: string) {
+  if (href === "/") return pathname === "/";
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 export default function MainNav() {
   return (
     <nav aria-label="Main navigation" className="hidden md:block">
@@ -28,4 +35,4 @@ export default function MainNav() {
   );
 }
 
-export { NAV_LINKS };
+export { NAV_LINKS, isActiveNavLink };

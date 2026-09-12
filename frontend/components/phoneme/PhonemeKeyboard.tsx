@@ -1,5 +1,6 @@
 import { PHONEME_KEYBOARD_ROWS } from "@/lib/phonemes";
 import PhonemeKeyButton from "./PhonemeKey";
+import Spinner from "../shared/Spinner";
 
 type PhonemeKeyboardProps = {
   onKeyPress: (symbol: string) => void;
@@ -7,9 +8,10 @@ type PhonemeKeyboardProps = {
   onEnter?: () => void;
   keyStates?: Record<string, "correct" | "present" | "absent">;
   disabled?: boolean;
+  enterLoading?: boolean;
 };
 
-export default function PhonemeKeyboard({onKeyPress, onBackspace, onEnter, keyStates = {}, disabled = false,}: PhonemeKeyboardProps) {
+export default function PhonemeKeyboard({onKeyPress, onBackspace, onEnter, keyStates = {}, disabled = false, enterLoading = false,}: PhonemeKeyboardProps) {
   return (
     <div className="flex flex-col justify-center items-center gap-3">
       <div
@@ -35,10 +37,11 @@ export default function PhonemeKeyboard({onKeyPress, onBackspace, onEnter, keySt
               <button
                 type="button"
                 onClick={onEnter}
-                disabled={disabled}
-                className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-50"
+                disabled={disabled || enterLoading}
+                className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-50"
               >
-                Enter
+                {enterLoading && <Spinner size={15} />}
+                {enterLoading ? "Saving..." : "Enter"}
               </button>
             )}
             {onBackspace && (

@@ -8,5 +8,5 @@ RUN npm ci
 COPY . .
 RUN npx prisma generate
 
-EXPOSE 80
-CMD ["sh", "-c", "npx prisma db push && npm run dev"]
+EXPOSE 3000
+CMD ["sh", "-c", "npx prisma migrate deploy && npm run dev"]

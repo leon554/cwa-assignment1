@@ -1,7 +1,7 @@
 "use client";
 
 import GenerateButton from "@/components/shared/GenerateButton";
-import { downloadHtmlFile } from "@/lib/html-export/download";
+import { downloadHtmlFile, slugify } from "@/lib/html-export/download";
 import { generateWordSearchHtml } from "@/lib/html-export/wordsearch-template";
 import { activityToPuzzle } from "@/lib/wordsearch/generator";
 import type { WordSearchPuzzle } from "@/lib/wordsearch/types";
@@ -30,7 +30,7 @@ export default function WordSearchBuilder({
   function handleGenerate() {
     if (!activity) return;
     const html = generateWordSearchHtml(activityToPuzzle(activity));
-    downloadHtmlFile(html, `phoneme-word-search-${activity.wordList.name}.html`);
+    downloadHtmlFile(html, `${slugify(activity.name, "phoneme-word-search")}.html`);
   }
 
   if (!activity) {
@@ -51,6 +51,8 @@ export default function WordSearchBuilder({
       <h3 className="text-sm font-semibold tracking-wide text-muted">
         Selected Activity
       </h3>
+
+      <p className="text-lg font-semibold">{activity.name}</p>
 
       <div>
         <p className="mb-1 block text-sm font-medium">

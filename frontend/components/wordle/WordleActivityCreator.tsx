@@ -9,6 +9,7 @@ import { WordleActivity } from "@/types/api-types";
 import { useWords } from "@/providers/WordsContext";
 
 export default function WordleActivityCreator() {
+    const [name, setName] = useState("");
     const [wordId, setWordId] = useState<number | null>(null);
     const [maxGuesses, setMaxGuesses] = useState("6");
     const [showEnglishWord, setShowEnglishWord] = useState(true);
@@ -20,12 +21,17 @@ export default function WordleActivityCreator() {
 
     useEffect(() => {
         if (create || !selectedActivity) return;
+        setName(selectedActivity.name);
         setWordId(selectedActivity.wordId);
         setMaxGuesses(`${selectedActivity.maxGuesses}`);
         setShowEnglishWord(selectedActivity.showEnglishWord ?? false);
     }, [selectedActivity]);
 
     function validate() {
+        if (!name.trim()) {
+            alert("Give the activity a name");
+            return false;
+        }
         if (!wordId) {
             alert("Select a word for the activity");
             return false;
@@ -43,11 +49,13 @@ export default function WordleActivityCreator() {
         setSaving(true);
         try {
             await createWordleActivity({
+                name: name.trim(),
                 wordId: wordId!,
                 maxGuesses: Number(maxGuesses),
                 showEnglishWord,
             });
             WC.refreshWordleActivities();
+            setName("");
             setWordId(null);
         } catch (error) {
             if (error instanceof ApiError) alert(error.message);
@@ -65,6 +73,7 @@ export default function WordleActivityCreator() {
         setSaving(true);
         try {
             await updateWordleActivity(selectedActivity.id, {
+                name: name.trim(),
                 wordId: wordId!,
                 maxGuesses: Number(maxGuesses),
                 showEnglishWord,
@@ -79,7 +88,7 @@ export default function WordleActivityCreator() {
     return (
         <div>
             <h3 className="mb-2 text-sm font-semibold tracking-wide text-muted">
-                Create New Wordle Activity
+                {create ? "Create New Wordle Activity" : "Update Existing Wordle Activity"}
             </h3>
             <div className="flex flex-col gap-3">
                 <LabeledSelect
@@ -104,10 +113,17 @@ export default function WordleActivityCreator() {
                         }}
                         options={WC.wordleActivities.map((a) => ({
                             value: a.id,
-                            label: `${a.word.phonemes.join(" ")} - ${a.word.englishWord}`,
+                            label: a.name,
                         }))}
                     />
                 )}
+
+                <LabeledInput
+                    type="text"
+                    title="Activity Name"
+                    value={name}
+                    setValue={(v) => setName(v)}
+                />
 
                 {WC.words.length === 0 ? (
                     <p className="text-sm text-muted">

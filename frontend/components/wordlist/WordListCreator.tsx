@@ -73,7 +73,7 @@ export default function WordListCreator() {
     return (
         <div>
         <h3 className="mb-2 text-sm font-semibold tracking-wide text-muted">
-            Create New Word List
+            {create ? "Create New Word List" : "Update Existing Word List"}
         </h3>
         <div className="flex flex-col gap-3">
             <LabeledSelect

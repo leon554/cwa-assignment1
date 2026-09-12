@@ -20,6 +20,7 @@ export interface PhonemeWordList {
 
 export interface WordleActivity {
   id: number;
+  name: string;
   wordId: number;
   maxGuesses: number;
   showEnglishWord: boolean | null;
@@ -29,6 +30,7 @@ export interface WordleActivity {
 
 export interface WordSearchActivity {
   id: number;
+  name: string;
   wordListId: number;
   gridWidth: number;
   gridHeight: number;
@@ -68,24 +70,28 @@ export interface UpdatePhonemeWordListInput {
 }
 
 export interface CreateWordleActivityInput {
+  name: string;
   wordId: number;
   maxGuesses?: number;
   showEnglishWord?: boolean;
 }
 
 export interface UpdateWordleActivityInput {
+  name?: string;
   wordId?: number;
   maxGuesses?: number;
   showEnglishWord?: boolean;
 }
 
 export interface CreateWordSearchActivityInput {
+  name: string;
   wordListId: number;
   gridWidth?: number;
   gridHeight?: number;
 }
 
 export interface UpdateWordSearchActivityInput {
+  name?: string;
   wordListId?: number;
   gridWidth?: number;
   gridHeight?: number;

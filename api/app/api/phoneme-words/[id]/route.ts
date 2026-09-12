@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { parseId, handlePrismaError, createNextResErr, status } from "@/lib/api-utils";
+import { parseId, handlePrismaError, createNextResErr, readJsonBody, status } from "@/lib/api-utils";
 import { validatePhonemeWordUpdate } from "@/lib/api/validation";
+import type { PhonemeWordBody } from "@/lib/api/types";
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: idParam } = await params;
   const id = parseId(idParam);
 
@@ -11,12 +12,16 @@ export async function GET(request: Request, { params }: { params: { id: string }
     return createNextResErr("Invalid ID");
   }
 
-  const word = await prisma.phonemeWord.findUnique({ where: { id } });
+  try {
+    const word = await prisma.phonemeWord.findUnique({ where: { id } });
 
-  if (!word) {
-    return createNextResErr("Word Not Found", 404);
+    if (!word) {
+      return createNextResErr("Word Not Found", 404);
+    }
+    return NextResponse.json(word, status());
+  } catch (error) {
+    return handlePrismaError(error, "Word");
   }
-  return NextResponse.json(word, status());
 }
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -27,18 +32,24 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     return createNextResErr("Invalid ID");
   }
 
-  const body = await request.json();
+  const body = await readJsonBody(request);
+  if (body === null) {
+    return createNextResErr("Request body must be valid JSON");
+  }
+
   const validationResult = validatePhonemeWordUpdate(body)
   if(!validationResult.success) {
     return NextResponse.json(validationResult.body, validationResult.status);
   } 
 
+  const { englishWord, phonemes } = body as unknown as Partial<PhonemeWordBody>;
+
   try {
     const word = await prisma.phonemeWord.update({
       where: { id },
       data: {
-        ...(body.englishWord && { englishWord: body.englishWord }),
-        ...(body.phonemes && { phonemes: body.phonemes }),
+        ...(englishWord !== undefined && { englishWord }),
+        ...(phonemes !== undefined && { phonemes }),
       },
     });
     return NextResponse.json(word, status());

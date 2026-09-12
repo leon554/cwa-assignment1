@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { parseId, handlePrismaError, status, createNextResErr } from "@/lib/api-utils";
+import { parseId, handlePrismaError, readJsonBody, status, createNextResErr } from "@/lib/api-utils";
+import { validateWordListUpdate } from "@/lib/api/validation";
+import type { WordListBody } from "@/lib/api/types";
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: idParam } = await params;
   const id = parseId(idParam);
   
@@ -10,19 +12,23 @@ export async function GET(request: Request, { params }: { params: { id: string }
     return createNextResErr("Invalid id");
   }
 
-  const list = await prisma.phonemeWordList.findUnique({
-    where: { id },
-    include: { words: true },
-  });
+  try {
+    const list = await prisma.phonemeWordList.findUnique({
+      where: { id },
+      include: { words: true },
+    });
 
-  if (!list) {
-    return createNextResErr("Word list not found", 404);
+    if (!list) {
+      return createNextResErr("Word list not found", 404);
+    }
+
+    return NextResponse.json(list, status());
+  } catch (error) {
+    return handlePrismaError(error, "Word list");
   }
-
-  return NextResponse.json(list, status());
 }
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: idParam } = await params;
   const id = parseId(idParam);
 
@@ -30,17 +36,24 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     return createNextResErr("Invalid id");
   }
 
-  const body = await request.json();
-  if (body.wordIds !== undefined && !Array.isArray(body.wordIds)) {
-    return createNextResErr("wordIds must be an array", 400);
+  const body = await readJsonBody(request);
+  if (body === null) {
+    return createNextResErr("Request body must be valid JSON");
   }
+
+  const validationResult = validateWordListUpdate(body)
+  if(!validationResult.success){
+    return NextResponse.json(validationResult.body, validationResult.status)
+  }
+
+  const { name, wordIds } = body as unknown as Partial<WordListBody>;
 
   try {
     const list = await prisma.phonemeWordList.update({
       where: { id },
       data: {
-        ...(body.name && { name: body.name }),
-        ...(body.wordIds && { words: { set: body.wordIds.map((wid: number) => ({ id: wid })) } }),
+        ...(name !== undefined && { name }),
+        ...(wordIds !== undefined && { words: { set: wordIds.map((wid) => ({ id: wid })) } }),
       },
       include: { words: true },
     });
@@ -50,7 +63,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: idParam } = await params;
   const id = parseId(idParam);
 

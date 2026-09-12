@@ -42,15 +42,15 @@ export default function WordSearchActivityFetcher({ onSelect, selectedId }: Prop
                             className={`border px-2 py-1 rounded-md ${a.id === selectedId ? "border-primary" : "border-card-border"}`}
                         >
                             <div className="flex items-center justify-between gap-2">
-                                <p className="font-semibold">{a.wordList.name}</p>
+                                <p className="font-semibold">{a.name}</p>
                                 <DeleteButton
                                     onDelete={() => deleteActivity(a.id)}
                                     deleting={deletingId === a.id}
-                                    label={`Delete activity for ${a.wordList.name}`}
+                                    label={`Delete ${a.name}`}
                                 />
                             </div>
                             <p className="text-sm text-muted">
-                                {a.gridWidth} x {a.gridHeight} grid,{" "}
+                                {a.wordList.name}, {a.gridWidth} x {a.gridHeight} grid,{" "}
                                 {a.wordList.words.length} words
                             </p>
                             <button

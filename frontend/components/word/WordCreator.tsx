@@ -6,7 +6,6 @@ import PhonemeKeyboard from "../phoneme/PhonemeKeyboard";
 import { createPhonemeWord, updatePhonemeWord } from "@/service/api-service";
 import { ApiError } from "@/service/api-service";
 import LabeledSelect from "../shared/LabeledSelect";
-import ActionButton from "../shared/ActionButton";
 import { PhonemeWord } from "@/types/api-types";
 import { useWords } from "@/providers/WordsContext";
 
@@ -79,7 +78,7 @@ export default function WordCreator() {
     return (
         <div>
             <h3 className="mb-2 text-sm font-semibold tracking-wide text-muted">
-                Create New Word
+                {create ? "Create New Word" : "Update Existing Word"}
             </h3>
             <div>
                 <div className="flex flex-col gap-3">
@@ -124,13 +123,7 @@ export default function WordCreator() {
                         onKeyPress={v => setPhonemes(p => [...p, v])}
                         onBackspace={() => setPhonemes(p => p.slice(0, -1))}
                         onEnter={() => create ? createWord() : updateWord()}
-                        disabled={saving}
-                    />
-                    <ActionButton
-                        onClick={() => create ? createWord() : updateWord()}
-                        label={create ? "Create Word" : "Update Word"}
-                        loading={saving}
-                        disabled={WC.wordsLoading}
+                        enterLoading={saving}
                     />
                 </div>
             </div>

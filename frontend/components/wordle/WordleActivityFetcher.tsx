@@ -42,15 +42,16 @@ export default function WordleActivityFetcher({ onSelect, selectedId }: Props) {
                             className={`border px-2 py-1 rounded-md ${a.id === selectedId ? "border-primary" : "border-card-border"}`}
                         >
                             <div className="flex items-center justify-between gap-2">
-                                <p className="font-semibold">
-                                    {a.word.phonemes.join(" ")} - {a.word.englishWord}
-                                </p>
+                                <p className="font-semibold">{a.name}</p>
                                 <DeleteButton
                                     onDelete={() => deleteActivity(a.id)}
                                     deleting={deletingId === a.id}
-                                    label={`Delete activity for ${a.word.englishWord}`}
+                                    label={`Delete ${a.name}`}
                                 />
                             </div>
+                            <p className="text-sm text-muted">
+                                {a.word.phonemes.join(" ")} - {a.word.englishWord}
+                            </p>
                             <p className="text-sm text-muted">
                                 {a.maxGuesses} guesses
                                 {a.showEnglishWord ? ", shows English word" : ""}
