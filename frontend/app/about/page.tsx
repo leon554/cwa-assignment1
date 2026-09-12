@@ -96,11 +96,14 @@ export default function AboutPage() {
             Assessment 2 walkthrough — CRUD, health check, Docker, and HTML
             generation from stored data.
           </p>
-          <div className="flex aspect-video items-center justify-center rounded-lg border-2 border-dashed border-card-border bg-background">
-            <p className="text-sm text-muted">
-              Video embed placeholder — add your Assessment 2 demonstration
-              video here
-            </p>
+         <div className="aspect-video overflow-hidden rounded-lg border-2 border-card-border bg-background">
+            <iframe
+              className="h-full w-full"
+              src="https://www.youtube.com/embed/BV5fQh75Eqo"
+              title="Assessment 2 demonstration video"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            />
           </div>
         </section>
       </div>

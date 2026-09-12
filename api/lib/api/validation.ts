@@ -24,8 +24,7 @@ function isNonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0;
 }
 
-// Phonemes must survive as discrete symbols, since a single symbol such as "tʃ"
-// spans more than one character.
+
 function validatePhonemeArray(phonemes: unknown): ValidationReturn {
   if (!Array.isArray(phonemes) || phonemes.length === 0) {
     return validationFailure("phonemes must be a non-empty array");
