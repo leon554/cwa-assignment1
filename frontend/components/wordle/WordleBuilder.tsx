@@ -4,105 +4,55 @@ import PhonemeWordDisplay from "@/components/phoneme/PhonemeWordDisplay";
 import GenerateButton from "@/components/shared/GenerateButton";
 import { downloadHtmlFile } from "@/lib/html-export/download";
 import { generateWordleHtml } from "@/lib/html-export/wordle-template";
-import { WORDLE_PRESETS } from "@/lib/phoneme-words";
-import type { WordleConfig } from "@/lib/wordle/types";
-import { useState } from "react";
-import LabeledInput from "../shared/LabeledInput";
+import { activityToWordleConfig } from "@/lib/wordle/types";
+import type { WordleActivity } from "@/types/api-types";
 
 type WordleBuilderProps = {
-  onConfigChange: (config: WordleConfig) => void;
+  activity: WordleActivity | null;
 };
 
-export default function WordleBuilder({ onConfigChange }: WordleBuilderProps) {
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const [maxGuesses, setMaxGuesses] = useState(6);
-  const [showEnglishOnWin, setShowEnglishOnWin] = useState(true);
-
-  const selectedWord = WORDLE_PRESETS[selectedIndex];
-
-  function getConfig(): WordleConfig {
-    return {
-      targetPhonemes: selectedWord.phonemes,
-      englishWord: selectedWord.english,
-      maxGuesses,
-      showEnglishOnWin,
-    };
-  }
-
-  function handleWordChange(index: number) {
-    setSelectedIndex(index);
-    const word = WORDLE_PRESETS[index];
-    onConfigChange({
-      targetPhonemes: word.phonemes,
-      englishWord: word.english,
-      maxGuesses,
-      showEnglishOnWin,
-    });
-  }
-
-  function handleGuessesChange(value: number) {
-    setMaxGuesses(value);
-    onConfigChange({
-      ...getConfig(),
-      maxGuesses: value,
-    });
-  }
-
-  function handleEnglishToggle(checked: boolean) {
-    setShowEnglishOnWin(checked);
-    onConfigChange({
-      ...getConfig(),
-      showEnglishOnWin: checked,
-    });
-  }
-
+export default function WordleBuilder({ activity }: WordleBuilderProps) {
   function handleGenerate() {
-    const config = getConfig();
+    if (!activity) return;
+    const config = activityToWordleConfig(activity);
     const html = generateWordleHtml(config);
     downloadHtmlFile(html, `phoneme-wordle-${config.englishWord}.html`);
   }
 
+  if (!activity) {
+    return (
+      <div>
+        <h3 className="mb-2 text-sm font-semibold tracking-wide text-muted">
+          Selected Activity
+        </h3>
+        <p className="text-sm text-muted">
+          Save an activity above, then load it to preview and generate the HTML output.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-5">
-      <div>
-        <label htmlFor="word-select" className="mb-1 block text-sm font-medium">
-          Target word
-        </label>
-        <select
-          id="word-select"
-          value={selectedIndex}
-          onChange={(e) => handleWordChange(Number(e.target.value))}
-          className="w-full rounded-md border border-card-border bg-background px-3 py-2 text-sm"
-        >
-          {WORDLE_PRESETS.map((word, i) => (
-            <option key={word.english} value={i}>
-              {word.english} — {word.phonemes.join(" ")}
-            </option>
-          ))}
-        </select>
-      </div>
+      <h3 className="text-sm font-semibold tracking-wide text-muted">
+        Selected Activity
+      </h3>
 
       <PhonemeWordDisplay
-        phonemes={selectedWord.phonemes}
-        english={selectedWord.english}
+        phonemes={activity.word.phonemes}
+        english={activity.word.englishWord}
       />
 
-      <LabeledInput
-        type="number"
-        title="Max Guesses"
-        value={`${maxGuesses}`}
-        setValue={v => handleGuessesChange(Number(v))}
-      />
-
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={showEnglishOnWin}
-          onChange={(e) => handleEnglishToggle(e.target.checked)}
-          className="rounded"
-        />
-        Show English word when answer is correct
-      </label>
+      <dl className="space-y-1 text-sm">
+        <div className="flex justify-between">
+          <dt className="text-muted">Max guesses</dt>
+          <dd className="font-medium">{activity.maxGuesses}</dd>
+        </div>
+        <div className="flex justify-between">
+          <dt className="text-muted">Show English word on win</dt>
+          <dd className="font-medium">{activity.showEnglishWord ? "Yes" : "No"}</dd>
+        </div>
+      </dl>
 
       <GenerateButton onGenerate={handleGenerate} label="Generate Wordle HTML" />
     </div>

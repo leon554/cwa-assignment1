@@ -1,8 +1,8 @@
 "use client";
 
 import {createContext, useContext, useEffect, useState, ReactNode,} from "react";
-import { getPhonemeWords, getPhonemeWordLists, ApiError,} from "@/service/api-service";
-import { PhonemeWord, PhonemeWordList } from "@/types/api-types";
+import { getPhonemeWords, getPhonemeWordLists, getWordleActivities, getWordSearchActivities, ApiError,} from "@/service/api-service";
+import { PhonemeWord, PhonemeWordList, WordleActivity, WordSearchActivity } from "@/types/api-types";
 
 interface WordsContextValue {
   loading: boolean;
@@ -13,6 +13,12 @@ interface WordsContextValue {
 
   wordLists: PhonemeWordList[];
   refreshWordLists: () => void;
+
+  wordleActivities: WordleActivity[];
+  refreshWordleActivities: () => void;
+
+  wordSearchActivities: WordSearchActivity[];
+  refreshWordSearchActivities: () => void;
 }
 
 const WordsContext = createContext<WordsContextValue | undefined>(undefined);
@@ -24,6 +30,12 @@ export function WordsProvider({ children }: { children: ReactNode }) {
 
     const [wordListsUpdate, setWordListsUpdate] = useState(0);
     const [wordLists, setWordLists] = useState<PhonemeWordList[]>([]);
+
+    const [wordleActivitiesUpdate, setWordleActivitiesUpdate] = useState(0);
+    const [wordleActivities, setWordleActivities] = useState<WordleActivity[]>([]);
+
+    const [wordSearchActivitiesUpdate, setWordSearchActivitiesUpdate] = useState(0);
+    const [wordSearchActivities, setWordSearchActivities] = useState<WordSearchActivity[]>([]);
 
     useEffect(() => {
         const run = async () => {
@@ -53,12 +65,48 @@ export function WordsProvider({ children }: { children: ReactNode }) {
         run();
     }, [wordListsUpdate]);
 
+    useEffect(() => {
+        const run = async () => {
+        setLoading(true);
+        try {
+            const activities = await getWordleActivities();
+            setWordleActivities(activities);
+        } catch (error) {
+            if (error instanceof ApiError) alert(error.message);
+        }
+        setLoading(false);
+        };
+        run();
+    }, [wordleActivitiesUpdate]);
+
+    useEffect(() => {
+        const run = async () => {
+        setLoading(true);
+        try {
+            const activities = await getWordSearchActivities();
+            setWordSearchActivities(activities);
+        } catch (error) {
+            if (error instanceof ApiError) alert(error.message);
+        }
+        setLoading(false);
+        };
+        run();
+    }, [wordSearchActivitiesUpdate]);
+
     function refreshWords() {
         setUpdate(Math.random());
     }
 
     function refreshWordLists() {
         setWordListsUpdate(Math.random());
+    }
+
+    function refreshWordleActivities() {
+        setWordleActivitiesUpdate(Math.random());
+    }
+
+    function refreshWordSearchActivities() {
+        setWordSearchActivitiesUpdate(Math.random());
     }
 
     return (
@@ -70,6 +118,10 @@ export function WordsProvider({ children }: { children: ReactNode }) {
             refreshWords,
             wordLists,
             refreshWordLists,
+            wordleActivities,
+            refreshWordleActivities,
+            wordSearchActivities,
+            refreshWordSearchActivities,
         }}
         >
         {children}

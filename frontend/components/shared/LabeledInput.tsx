@@ -5,9 +5,11 @@ interface Props{
     title: string
     value: string
     setValue: (value: string) => void
+    min?: number
+    max?: number
 }
 
-export default function LabeledInput({type, title, value, setValue}: Props) {
+export default function LabeledInput({type, title, value, setValue, min = 3, max = 10}: Props) {
     return (
         <div>
             <label htmlFor="max-guesses" className="mb-1 block text-sm font-medium">
@@ -16,8 +18,8 @@ export default function LabeledInput({type, title, value, setValue}: Props) {
             <input
                 id={title}
                 type={type}
-                min={3}
-                max={10}
+                min={min}
+                max={max}
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
                 className="w-full rounded-md border border-card-border bg-background px-3 py-2 text-sm"

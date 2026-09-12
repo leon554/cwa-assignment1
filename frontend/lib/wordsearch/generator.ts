@@ -1,3 +1,4 @@
+import type { WordSearchActivity } from "@/types/api-types";
 import {
   DIRECTIONS,
   type PlacedWord,
@@ -73,6 +74,13 @@ export function generateWordSearch(words: string[], rows: number, cols: number):
   );
 
   return { rows, cols, grid, words: wordsData, solutions };
+}
+
+// Phonemes are space separated so the generator treats multi character symbols
+// such as "tʃ" as a single grid cell.
+export function activityToPuzzle(activity: WordSearchActivity): WordSearchPuzzle {
+  const lines = activity.wordList.words.map((w) => w.phonemes.join(" "));
+  return generateWordSearch(lines, activity.gridHeight, activity.gridWidth);
 }
 
 export function getPath(r1: number, c1: number, r2: number, c2: number): { r: number; c: number }[] | null {

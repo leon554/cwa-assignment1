@@ -3,111 +3,89 @@
 import GenerateButton from "@/components/shared/GenerateButton";
 import { downloadHtmlFile } from "@/lib/html-export/download";
 import { generateWordSearchHtml } from "@/lib/html-export/wordsearch-template";
-import { defaultWordSearchText } from "@/lib/phoneme-words";
-import { generateWordSearch } from "@/lib/wordsearch/generator";
+import { activityToPuzzle } from "@/lib/wordsearch/generator";
 import type { WordSearchPuzzle } from "@/lib/wordsearch/types";
-import { useCallback, useState } from "react";
+import type { WordSearchActivity } from "@/types/api-types";
 
 type WordSearchBuilderProps = {
+  activity: WordSearchActivity | null;
   onPuzzleChange: (puzzle: WordSearchPuzzle) => void;
+  showAnswers: boolean;
   onShowAnswersChange: (show: boolean) => void;
 };
 
 export default function WordSearchBuilder({
+  activity,
   onPuzzleChange,
+  showAnswers,
   onShowAnswersChange,
 }: WordSearchBuilderProps) {
-  const [wordText, setWordText] = useState(defaultWordSearchText());
-  const [rows, setRows] = useState(10);
-  const [cols, setCols] = useState(10);
-  const [showAnswers, setShowAnswers] = useState(false);
-  const [error, setError] = useState("");
-
-  const buildPuzzle = useCallback(() => {
-    const lines = wordText.trim().split("\n").map((l) => l.trim()).filter((l) => l.length > 0);
-
-    if (lines.length === 0) {
-      setError("Enter at least one word.");
-      return null;
-    }
-
-    setError("");
-    return generateWordSearch(lines, rows, cols);
-  }, [wordText, rows, cols]);
+  const words = activity?.wordList.words ?? [];
 
   function handleRegenerate() {
-    const puzzle = buildPuzzle();
-    if (puzzle) onPuzzleChange(puzzle);
-  }
-
-  function handleShowAnswers(checked: boolean) {
-    setShowAnswers(checked);
-    onShowAnswersChange(checked);
+    if (!activity) return;
+    onPuzzleChange(activityToPuzzle(activity));
   }
 
   function handleGenerate() {
-    const puzzle = buildPuzzle();
-    if (!puzzle) return;
-    const html = generateWordSearchHtml(puzzle);
-    downloadHtmlFile(html, "phoneme-word-search.html");
+    if (!activity) return;
+    const html = generateWordSearchHtml(activityToPuzzle(activity));
+    downloadHtmlFile(html, `phoneme-word-search-${activity.wordList.name}.html`);
+  }
+
+  if (!activity) {
+    return (
+      <div>
+        <h3 className="mb-2 text-sm font-semibold tracking-wide text-muted">
+          Selected Activity
+        </h3>
+        <p className="text-sm text-muted">
+          Save an activity above, then load it to preview and generate the HTML output.
+        </p>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-5">
+      <h3 className="text-sm font-semibold tracking-wide text-muted">
+        Selected Activity
+      </h3>
+
       <div>
-        <label htmlFor="word-input" className="mb-1 block text-sm font-medium">
-          Words (one per line, space-separated phonemes)
-        </label>
-        <textarea
-          id="word-input"
-          value={wordText}
-          onChange={(e) => setWordText(e.target.value)}
-          rows={6}
-          className="w-full rounded-md border border-card-border bg-background px-3 py-2 font-mono text-sm"
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label htmlFor="grid-rows" className="mb-1 block text-sm font-medium">
-            Rows
-          </label>
-          <input
-            id="grid-rows"
-            type="number"
-            min={5}
-            max={20}
-            value={rows}
-            onChange={(e) => setRows(Number(e.target.value))}
-            className="w-full rounded-md border border-card-border bg-background px-3 py-2 text-sm"
-          />
-        </div>
-        <div>
-          <label htmlFor="grid-cols" className="mb-1 block text-sm font-medium">
-            Cols
-          </label>
-          <input
-            id="grid-cols"
-            type="number"
-            min={5}
-            max={20}
-            value={cols}
-            onChange={(e) => setCols(Number(e.target.value))}
-            className="w-full rounded-md border border-card-border bg-background px-3 py-2 text-sm"
-          />
-        </div>
-      </div>
-
-      {error && (
-        <p role="alert" className="text-sm text-red-600 dark:text-red-400">
-          {error}
+        <p className="mb-1 block text-sm font-medium">
+          Words in {activity.wordList.name}
         </p>
-      )}
+        <div className="max-h-48 overflow-y-auto rounded-md border border-card-border bg-background p-2 font-mono text-sm">
+          {words.length === 0 ? (
+            <p role="alert" className="font-sans text-red-600 dark:text-red-400">
+              This word list is empty, so no puzzle can be built.
+            </p>
+          ) : (
+            words.map((w) => (
+              <p key={w.id}>
+                {w.phonemes.join(" ")}
+                <span className="ml-2 font-sans text-muted">{w.englishWord}</span>
+              </p>
+            ))
+          )}
+        </div>
+      </div>
+
+      <dl className="space-y-1 text-sm">
+        <div className="flex justify-between">
+          <dt className="text-muted">Grid size</dt>
+          <dd className="font-medium">
+            {activity.gridWidth} x {activity.gridHeight}
+          </dd>
+        </div>
+      </dl>
 
       <button
         type="button"
         onClick={handleRegenerate}
-        className="w-full rounded-md border border-card-border bg-background px-4 py-2 text-sm font-semibold hover:bg-card"
+        disabled={words.length === 0}
+        className="w-full rounded-md border border-card-border bg-background px-4 py-2 text-sm font-semibold hover:bg-card disabled:cursor-not-allowed disabled:opacity-50"
       >
         Regenerate puzzle
       </button>
@@ -116,7 +94,7 @@ export default function WordSearchBuilder({
         <input
           type="checkbox"
           checked={showAnswers}
-          onChange={(e) => handleShowAnswers(e.target.checked)}
+          onChange={(e) => onShowAnswersChange(e.target.checked)}
           className="rounded"
         />
         Show answers (preview only)
@@ -125,6 +103,7 @@ export default function WordSearchBuilder({
       <GenerateButton
         onGenerate={handleGenerate}
         label="Generate Word Search HTML"
+        disabled={words.length === 0}
       />
     </div>
   );
