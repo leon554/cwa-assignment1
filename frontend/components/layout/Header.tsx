@@ -11,7 +11,7 @@ export default function Header() {
             HCE Phoneme Activity Builder
           </h1>
           <p className="hidden text-xs text-muted sm:block">
-            Assessment 1 — Speech Pathology Classroom Tools
+            Assessment 2 — Speech Pathology Classroom Tools
           </p>
         </Link>
         <MainNavClient />

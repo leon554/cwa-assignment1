@@ -98,18 +98,3 @@ export function getPath(r1: number, c1: number, r2: number, c2: number): { r: nu
   }
   return null;
 }
-
-export function getSelectionString(
-  path: { r: number; c: number }[],
-  grid: string[][],
-): { forward: string; reverse: string } {
-  let forward = "";
-  let reverse = "";
-  for (const co of path) {
-    forward += grid[co.r][co.c];
-  }
-  for (let i = path.length - 1; i >= 0; i--) {
-    reverse += grid[path[i].r][path[i].c];
-  }
-  return { forward, reverse };
-}

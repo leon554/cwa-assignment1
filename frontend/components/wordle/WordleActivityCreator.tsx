@@ -18,6 +18,7 @@ export default function WordleActivityCreator() {
     const [saving, setSaving] = useState(false);
 
     const WC = useWords()
+    const cannotUpdate = !create && WC.wordleActivities.length === 0
 
     useEffect(() => {
         if (create || !selectedActivity) return;
@@ -102,6 +103,12 @@ export default function WordleActivityCreator() {
                     ]}
                 />
 
+                {cannotUpdate ? (
+                    <p role="status" className="text-sm text-muted">
+                        No Wordle activities saved yet. Create one first before you can update.
+                    </p>
+                ) : (
+                <>
                 {!create && (
                     <LabeledSelect
                         id="wordle-activity-select"
@@ -165,6 +172,8 @@ export default function WordleActivityCreator() {
                     loading={saving}
                     disabled={WC.wordleActivitiesLoading || WC.words.length === 0}
                 />
+                </>
+                )}
             </div>
         </div>
     );

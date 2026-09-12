@@ -1,7 +1,5 @@
 import HealthCheck from "@/components/settings/HealthCheck";
 import SettingsForm from "@/components/settings/SettingsForm";
-import { LAYOUT_COOKIE, THEME_COOKIE } from "@/types/settings";
-import { cookies } from "next/headers";
 
 export default async function SettingsPage() {
   return (

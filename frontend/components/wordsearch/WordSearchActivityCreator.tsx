@@ -21,6 +21,7 @@ export default function WordSearchActivityCreator() {
 
     const selectedList = WC.wordLists.find((l) => l.id === wordListId);
     const emptyList = selectedList !== undefined && selectedList.words.length === 0;
+    const cannotUpdate = !create && WC.wordSearchActivities.length === 0
 
     useEffect(() => {
         if (create || !selectedActivity) return;
@@ -113,6 +114,12 @@ export default function WordSearchActivityCreator() {
                     ]}
                 />
 
+                {cannotUpdate ? (
+                    <p role="status" className="text-sm text-muted">
+                        No Word Search activities saved yet. Create one first before you can update.
+                    </p>
+                ) : (
+                <>
                 {!create && (
                     <LabeledSelect
                         id="word-search-activity-select"
@@ -184,6 +191,8 @@ export default function WordSearchActivityCreator() {
                     loading={saving}
                     disabled={WC.wordSearchActivitiesLoading || WC.wordLists.length === 0 || emptyList}
                 />
+                </>
+                )}
             </div>
         </div>
     );

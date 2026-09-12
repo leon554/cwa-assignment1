@@ -5,7 +5,7 @@ import LabeledInput from "../shared/LabeledInput";
 import LabeledSelect from "../shared/LabeledSelect";
 import ActionButton from "../shared/ActionButton";
 import { createPhonemeWordList, updatePhonemeWordList, ApiError,} from "@/service/api-service";
-import { PhonemeWordList, PhonemeWord } from "@/types/api-types";
+import { PhonemeWordList } from "@/types/api-types";
 import { useWords } from "@/providers/WordsContext";
 
 
@@ -17,6 +17,7 @@ export default function WordListCreator() {
     const [saving, setSaving] = useState(false);
 
     const WC = useWords()
+    const cannotUpdate = !create && WC.wordLists.length === 0
 
     useEffect(() => {
         if (create || !selectedList) return;
@@ -87,6 +88,12 @@ export default function WordListCreator() {
             ]}
             />
 
+            {cannotUpdate ? (
+            <p role="status" className="text-sm text-muted">
+                No word lists saved yet. Create one first before you can update.
+            </p>
+            ) : (
+            <>
             {!create && (
             <LabeledSelect
                 id="listselect"
@@ -137,6 +144,8 @@ export default function WordListCreator() {
             loading={saving}
             disabled={WC.wordListsLoading}
             />
+            </>
+            )}
         </div>
         </div>
     );

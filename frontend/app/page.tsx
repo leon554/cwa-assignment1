@@ -53,7 +53,8 @@ export default function HomePage() {
           <Link href="/about" className="font-medium text-primary hover:underline">
             Read the About page
           </Link>{" "}
-          to learn how Assessment 1 works and watch the demonstration video.
+          to learn how Assessments 1 and 2 work and watch the demonstration
+            video.
         </p>
       </section>
     </div>

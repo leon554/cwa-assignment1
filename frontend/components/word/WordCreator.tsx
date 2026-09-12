@@ -18,6 +18,7 @@ export default function WordCreator() {
     const [saving, setSaving] = useState(false)
 
     const WC = useWords()
+    const cannotUpdate = !create && WC.words.length === 0
 
     useEffect(() => {
         if(create || !selectedWord) return
@@ -92,6 +93,12 @@ export default function WordCreator() {
                             {value: "Update Word", label: "Update Word"}
                         ]}
                     />
+                    {cannotUpdate ? (
+                    <p role="status" className="text-sm text-muted">
+                        No words saved yet. Create one first before you can update.
+                    </p>
+                    ) : (
+                    <>
                     {!create &&
                    <LabeledSelect
                         id="wordselect"
@@ -125,6 +132,8 @@ export default function WordCreator() {
                         onEnter={() => create ? createWord() : updateWord()}
                         enterLoading={saving}
                     />
+                    </>
+                    )}
                 </div>
             </div>
         </div>
