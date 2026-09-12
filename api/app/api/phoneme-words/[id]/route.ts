@@ -4,7 +4,8 @@ import { parseId, handlePrismaError, createNextResErr, status } from "@/lib/api-
 import { validatePhonemeWordUpdate } from "@/lib/api/validation";
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
-  const id = parseId(params.id);
+  const { id: idParam } = await params;
+  const id = parseId(idParam);
 
   if (id === null) {
     return createNextResErr("Invalid ID");
@@ -18,8 +19,10 @@ export async function GET(request: Request, { params }: { params: { id: string }
   return NextResponse.json(word, status());
 }
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
-  const id = parseId(params.id);
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id: idParam } = await params;
+  const id = parseId(idParam);
+
   if (id === null) {
     return createNextResErr("Invalid ID");
   }
@@ -44,8 +47,11 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
-  const id = parseId(params.id);
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }
+) {
+  const { id: idParam } = await params;
+  const id = parseId(idParam);
+
   if (id === null) {
     return createNextResErr("Invalid ID");
   }

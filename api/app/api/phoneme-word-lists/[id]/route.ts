@@ -3,7 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { parseId, handlePrismaError, status, createNextResErr } from "@/lib/api-utils";
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
-  const id = parseId(params.id);
+  const { id: idParam } = await params;
+  const id = parseId(idParam);
+  
   if (id === null) {
     return createNextResErr("Invalid id");
   }
@@ -21,7 +23,9 @@ export async function GET(request: Request, { params }: { params: { id: string }
 }
 
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
-  const id = parseId(params.id);
+  const { id: idParam } = await params;
+  const id = parseId(idParam);
+
   if (id === null) {
     return createNextResErr("Invalid id");
   }
@@ -47,7 +51,9 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 }
 
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
-  const id = parseId(params.id);
+  const { id: idParam } = await params;
+  const id = parseId(idParam);
+
   if (id === null) {
     return createNextResErr("Invalid id");
   }

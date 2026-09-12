@@ -20,9 +20,6 @@ export default function BuilderLayout({section1, section2, title}: BuilderLayout
             aria-label="Activity preview"
             className="builder-section rounded-xl border border-card-border bg-card p-5 shadow-sm"
           >
-            <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted">
-              Preview
-            </h3>
             {section2}
           </section>
         }

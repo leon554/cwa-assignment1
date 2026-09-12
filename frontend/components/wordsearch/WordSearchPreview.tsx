@@ -10,10 +10,15 @@ type WordSearchPreviewProps = {
 
 export default function WordSearchPreview({puzzle, showAnswers}: WordSearchPreviewProps) {
   return (
-    <WordSearchGrid
-      key={`${puzzle.rows}-${puzzle.cols}-${puzzle.words.map((w) => w.display).join("-")}`}
-      puzzle={puzzle}
-      showAnswers={showAnswers}
-    />
+    <>
+      <h3 className="w-full text-sm font-semibold tracking-wide text-muted mb-5">
+        PREVIEW
+      </h3>
+      <WordSearchGrid
+        key={`${puzzle.rows}-${puzzle.cols}-${puzzle.words.map((w) => w.display).join("-")}`}
+        puzzle={puzzle}
+        showAnswers={showAnswers}
+      />
+    </>
   );
 }
