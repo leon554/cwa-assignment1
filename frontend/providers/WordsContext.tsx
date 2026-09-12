@@ -5,123 +5,77 @@ import { getPhonemeWords, getPhonemeWordLists, getWordleActivities, getWordSearc
 import { PhonemeWord, PhonemeWordList, WordleActivity, WordSearchActivity } from "@/types/api-types";
 
 interface WordsContextValue {
-  loading: boolean;
-  setLoading: (loading: boolean) => void;
-
   words: PhonemeWord[];
+  wordsLoading: boolean;
   refreshWords: () => void;
 
   wordLists: PhonemeWordList[];
+  wordListsLoading: boolean;
   refreshWordLists: () => void;
 
   wordleActivities: WordleActivity[];
+  wordleActivitiesLoading: boolean;
   refreshWordleActivities: () => void;
 
   wordSearchActivities: WordSearchActivity[];
+  wordSearchActivitiesLoading: boolean;
   refreshWordSearchActivities: () => void;
 }
 
 const WordsContext = createContext<WordsContextValue | undefined>(undefined);
 
+// Each collection owns its own loading flag so one request never blanks out
+// the other lists. `fetchAll` must be a stable reference.
+function useCollection<T>(fetchAll: () => Promise<T[]>) {
+    const [items, setItems] = useState<T[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [version, setVersion] = useState(0);
+
+    useEffect(() => {
+        let active = true;
+        const run = async () => {
+            setLoading(true);
+            try {
+                const data = await fetchAll();
+                if (active) setItems(data);
+            } catch (error) {
+                if (error instanceof ApiError) alert(error.message);
+            }
+            if (active) setLoading(false);
+        };
+        run();
+        return () => {
+            active = false;
+        };
+    }, [version]);
+
+    return { items, loading, refresh: () => setVersion((v) => v + 1) };
+}
+
 export function WordsProvider({ children }: { children: ReactNode }) {
-    const [loading, setLoading] = useState(false);
-    const [update, setUpdate] = useState(0);
-    const [words, setWords] = useState<PhonemeWord[]>([]);
-
-    const [wordListsUpdate, setWordListsUpdate] = useState(0);
-    const [wordLists, setWordLists] = useState<PhonemeWordList[]>([]);
-
-    const [wordleActivitiesUpdate, setWordleActivitiesUpdate] = useState(0);
-    const [wordleActivities, setWordleActivities] = useState<WordleActivity[]>([]);
-
-    const [wordSearchActivitiesUpdate, setWordSearchActivitiesUpdate] = useState(0);
-    const [wordSearchActivities, setWordSearchActivities] = useState<WordSearchActivity[]>([]);
-
-    useEffect(() => {
-        const run = async () => {
-        setLoading(true);
-        try {
-            const words = await getPhonemeWords();
-            setWords(words);
-        } catch (error) {
-            if (error instanceof ApiError) alert(error.message);
-        }
-        setLoading(false);
-        };
-        run();
-    }, [update]);
-
-    useEffect(() => {
-        const run = async () => {
-        setLoading(true);
-        try {
-            const lists = await getPhonemeWordLists();
-            setWordLists(lists);
-        } catch (error) {
-            if (error instanceof ApiError) alert(error.message);
-        }
-        setLoading(false);
-        };
-        run();
-    }, [wordListsUpdate]);
-
-    useEffect(() => {
-        const run = async () => {
-        setLoading(true);
-        try {
-            const activities = await getWordleActivities();
-            setWordleActivities(activities);
-        } catch (error) {
-            if (error instanceof ApiError) alert(error.message);
-        }
-        setLoading(false);
-        };
-        run();
-    }, [wordleActivitiesUpdate]);
-
-    useEffect(() => {
-        const run = async () => {
-        setLoading(true);
-        try {
-            const activities = await getWordSearchActivities();
-            setWordSearchActivities(activities);
-        } catch (error) {
-            if (error instanceof ApiError) alert(error.message);
-        }
-        setLoading(false);
-        };
-        run();
-    }, [wordSearchActivitiesUpdate]);
-
-    function refreshWords() {
-        setUpdate(Math.random());
-    }
-
-    function refreshWordLists() {
-        setWordListsUpdate(Math.random());
-    }
-
-    function refreshWordleActivities() {
-        setWordleActivitiesUpdate(Math.random());
-    }
-
-    function refreshWordSearchActivities() {
-        setWordSearchActivitiesUpdate(Math.random());
-    }
+    const words = useCollection(getPhonemeWords);
+    const wordLists = useCollection(getPhonemeWordLists);
+    const wordleActivities = useCollection(getWordleActivities);
+    const wordSearchActivities = useCollection(getWordSearchActivities);
 
     return (
         <WordsContext.Provider
         value={{
-            loading,
-            setLoading,
-            words,
-            refreshWords,
-            wordLists,
-            refreshWordLists,
-            wordleActivities,
-            refreshWordleActivities,
-            wordSearchActivities,
-            refreshWordSearchActivities,
+            words: words.items,
+            wordsLoading: words.loading,
+            refreshWords: words.refresh,
+
+            wordLists: wordLists.items,
+            wordListsLoading: wordLists.loading,
+            refreshWordLists: wordLists.refresh,
+
+            wordleActivities: wordleActivities.items,
+            wordleActivitiesLoading: wordleActivities.loading,
+            refreshWordleActivities: wordleActivities.refresh,
+
+            wordSearchActivities: wordSearchActivities.items,
+            wordSearchActivitiesLoading: wordSearchActivities.loading,
+            refreshWordSearchActivities: wordSearchActivities.refresh,
         }}
         >
         {children}

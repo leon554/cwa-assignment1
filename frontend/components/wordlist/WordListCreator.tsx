@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import LabeledInput from "../shared/LabeledInput";
 import LabeledSelect from "../shared/LabeledSelect";
+import ActionButton from "../shared/ActionButton";
 import { createPhonemeWordList, updatePhonemeWordList, ApiError,} from "@/service/api-service";
 import { PhonemeWordList, PhonemeWord } from "@/types/api-types";
 import { useWords } from "@/providers/WordsContext";
@@ -13,6 +14,7 @@ export default function WordListCreator() {
     const [selectedWordIds, setSelectedWordIds] = useState<number[]>([]);
     const [create, setCreate] = useState(true);
     const [selectedList, setSelectedList] = useState<null | PhonemeWordList>(null);
+    const [saving, setSaving] = useState(false);
 
     const WC = useWords()
 
@@ -34,7 +36,7 @@ export default function WordListCreator() {
             return;
         }
 
-        WC.setLoading(true);
+        setSaving(true);
         try {
             await createPhonemeWordList({
                 name,
@@ -46,7 +48,7 @@ export default function WordListCreator() {
         } catch (error) {
             if (error instanceof ApiError) alert(error.message);
         }
-        WC.setLoading(false);
+        setSaving(false);
     }
 
     async function updateList() {
@@ -55,7 +57,7 @@ export default function WordListCreator() {
             return;
         }
 
-        WC.setLoading(true);
+        setSaving(true);
         try {
             await updatePhonemeWordList(selectedList.id, {
                 name,
@@ -65,7 +67,7 @@ export default function WordListCreator() {
         } catch (error) {
             if (error instanceof ApiError) alert(error.message);
         }
-        WC.setLoading(false);
+        setSaving(false);
     }
 
     return (
@@ -129,13 +131,12 @@ export default function WordListCreator() {
             </div>
             </div>
 
-            <button
-            disabled={WC.loading}
+            <ActionButton
             onClick={() => (create ? createList() : updateList())}
-            className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-            >
-            {WC.loading ? "Saving..." : create ? "Create List" : "Update List"}
-            </button>
+            label={create ? "Create List" : "Update List"}
+            loading={saving}
+            disabled={WC.wordListsLoading}
+            />
         </div>
         </div>
     );

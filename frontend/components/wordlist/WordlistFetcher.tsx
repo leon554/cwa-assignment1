@@ -1,22 +1,24 @@
 "use client";
 
-import { useEffect } from "react";
-import { deletePhonemeWordList, getPhonemeWordLists, ApiError } from "@/service/api-service";
-import { PhonemeWordList } from "@/types/api-types";
+import { useState } from "react";
+import { deletePhonemeWordList, ApiError } from "@/service/api-service";
 import { useWords } from "@/providers/WordsContext";
+import DeleteButton from "../shared/DeleteButton";
+import LoadingRow from "../shared/LoadingRow";
 
 export default function WordListFetcher() {
     const WC = useWords()
+    const [deletingId, setDeletingId] = useState<number | null>(null)
 
     async function deleteList(id: number) {
-        WC.setLoading(true);
+        setDeletingId(id);
         try {
             await deletePhonemeWordList(id);
             WC.refreshWordLists()
         } catch (error) {
             if (error instanceof ApiError) alert(error.message);
         }
-        WC.setLoading(false);
+        setDeletingId(null);
     }
 
     return (
@@ -25,8 +27,8 @@ export default function WordListFetcher() {
                 Word Lists
             </h3>
             <div>
-                {WC.loading ? (
-                <p className="animate-pulse">Loading...</p>
+                {WC.wordListsLoading ? (
+                <LoadingRow/>
                 ) : WC.wordLists.length !== 0 ? (
                 <div className="flex flex-col gap-2">
                     {WC.wordLists.map((list) => (
@@ -34,15 +36,14 @@ export default function WordListFetcher() {
                         key={list.id}
                         className="border px-2 py-1 rounded-md border-card-border"
                     >
-                        <p className="font-semibold">
-                        {list.name}
-                        <span
-                            className="ml-2 font-mono font-bold text-red-500 hover:cursor-pointer"
-                            onClick={() => deleteList(list.id)}
-                        >
-                            {" x"}
-                        </span>
-                        </p>
+                        <div className="flex items-center justify-between gap-2">
+                            <p className="font-semibold">{list.name}</p>
+                            <DeleteButton
+                                onDelete={() => deleteList(list.id)}
+                                deleting={deletingId === list.id}
+                                label={`Delete ${list.name}`}
+                            />
+                        </div>
                         <p className="text-sm text-muted">
                         {list.words.map((w) => w.englishWord).join(", ") || "No words"}
                         </p>

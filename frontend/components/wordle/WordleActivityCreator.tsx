@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import LabeledInput from "../shared/LabeledInput";
 import LabeledSelect from "../shared/LabeledSelect";
+import ActionButton from "../shared/ActionButton";
 import { createWordleActivity, updateWordleActivity, ApiError } from "@/service/api-service";
 import { WordleActivity } from "@/types/api-types";
 import { useWords } from "@/providers/WordsContext";
@@ -13,6 +14,7 @@ export default function WordleActivityCreator() {
     const [showEnglishWord, setShowEnglishWord] = useState(true);
     const [create, setCreate] = useState(true);
     const [selectedActivity, setSelectedActivity] = useState<null | WordleActivity>(null);
+    const [saving, setSaving] = useState(false);
 
     const WC = useWords()
 
@@ -38,7 +40,7 @@ export default function WordleActivityCreator() {
     async function createActivity() {
         if (!validate()) return;
 
-        WC.setLoading(true);
+        setSaving(true);
         try {
             await createWordleActivity({
                 wordId: wordId!,
@@ -50,7 +52,7 @@ export default function WordleActivityCreator() {
         } catch (error) {
             if (error instanceof ApiError) alert(error.message);
         }
-        WC.setLoading(false);
+        setSaving(false);
     }
 
     async function updateActivity() {
@@ -60,7 +62,7 @@ export default function WordleActivityCreator() {
         }
         if (!validate()) return;
 
-        WC.setLoading(true);
+        setSaving(true);
         try {
             await updateWordleActivity(selectedActivity.id, {
                 wordId: wordId!,
@@ -71,7 +73,7 @@ export default function WordleActivityCreator() {
         } catch (error) {
             if (error instanceof ApiError) alert(error.message);
         }
-        WC.setLoading(false);
+        setSaving(false);
     }
 
     return (
@@ -141,13 +143,12 @@ export default function WordleActivityCreator() {
                     Show English word when answer is correct
                 </label>
 
-                <button
-                    disabled={WC.loading || WC.words.length === 0}
+                <ActionButton
                     onClick={() => (create ? createActivity() : updateActivity())}
-                    className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-                >
-                    {WC.loading ? "Saving..." : create ? "Create Activity" : "Update Activity"}
-                </button>
+                    label={create ? "Create Activity" : "Update Activity"}
+                    loading={saving}
+                    disabled={WC.wordleActivitiesLoading || WC.words.length === 0}
+                />
             </div>
         </div>
     );

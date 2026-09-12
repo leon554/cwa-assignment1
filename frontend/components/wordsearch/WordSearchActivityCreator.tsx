@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import LabeledInput from "../shared/LabeledInput";
 import LabeledSelect from "../shared/LabeledSelect";
+import ActionButton from "../shared/ActionButton";
 import { createWordSearchActivity, updateWordSearchActivity, ApiError } from "@/service/api-service";
 import { WordSearchActivity } from "@/types/api-types";
 import { useWords } from "@/providers/WordsContext";
@@ -13,6 +14,7 @@ export default function WordSearchActivityCreator() {
     const [gridHeight, setGridHeight] = useState("10");
     const [create, setCreate] = useState(true);
     const [selectedActivity, setSelectedActivity] = useState<null | WordSearchActivity>(null);
+    const [saving, setSaving] = useState(false);
 
     const WC = useWords()
 
@@ -49,7 +51,7 @@ export default function WordSearchActivityCreator() {
     async function createActivity() {
         if (!validate()) return;
 
-        WC.setLoading(true);
+        setSaving(true);
         try {
             await createWordSearchActivity({
                 wordListId: wordListId!,
@@ -61,7 +63,7 @@ export default function WordSearchActivityCreator() {
         } catch (error) {
             if (error instanceof ApiError) alert(error.message);
         }
-        WC.setLoading(false);
+        setSaving(false);
     }
 
     async function updateActivity() {
@@ -71,7 +73,7 @@ export default function WordSearchActivityCreator() {
         }
         if (!validate()) return;
 
-        WC.setLoading(true);
+        setSaving(true);
         try {
             await updateWordSearchActivity(selectedActivity.id, {
                 wordListId: wordListId!,
@@ -82,7 +84,7 @@ export default function WordSearchActivityCreator() {
         } catch (error) {
             if (error instanceof ApiError) alert(error.message);
         }
-        WC.setLoading(false);
+        setSaving(false);
     }
 
     return (
@@ -160,13 +162,12 @@ export default function WordSearchActivityCreator() {
                     />
                 </div>
 
-                <button
-                    disabled={WC.loading || WC.wordLists.length === 0 || emptyList}
+                <ActionButton
                     onClick={() => (create ? createActivity() : updateActivity())}
-                    className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-                >
-                    {WC.loading ? "Saving..." : create ? "Create Activity" : "Update Activity"}
-                </button>
+                    label={create ? "Create Activity" : "Update Activity"}
+                    loading={saving}
+                    disabled={WC.wordSearchActivitiesLoading || WC.wordLists.length === 0 || emptyList}
+                />
             </div>
         </div>
     );

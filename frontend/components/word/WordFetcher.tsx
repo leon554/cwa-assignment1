@@ -1,24 +1,26 @@
 'use client';
 
-import { useEffect, useState } from "react";
-import { deletePhonemeWord, getPhonemeWords } from "@/service/api-service";
-import { PhonemeWord} from "@/types/api-types";
+import { useState } from "react";
+import { deletePhonemeWord } from "@/service/api-service";
 import { ApiError } from "@/service/api-service";
 import { useWords } from "@/providers/WordsContext";
+import DeleteButton from "../shared/DeleteButton";
+import LoadingRow from "../shared/LoadingRow";
 
 
 export default function WordFetcher() {
     const WC = useWords()
-    
+    const [deletingId, setDeletingId] = useState<number | null>(null)
+
     async function deleteWord(id: number){
-        WC.setLoading(true)
+        setDeletingId(id)
         try {
             await deletePhonemeWord(id)
             WC.refreshWords()
         } catch (error) {
             if (error instanceof ApiError) alert(error.message);
         }
-        WC.setLoading(false)
+        setDeletingId(null)
     }
 
     return (
@@ -27,20 +29,18 @@ export default function WordFetcher() {
                 Word List
             </h3>
             <div>
-                {WC.loading ? 
-                <p className="animate-pulse"> 
-                    Loading...
-                </p> : WC.words.length != 0 ? 
+                {WC.wordsLoading ? 
+                <LoadingRow/> : WC.words.length != 0 ? 
                 <div className="flex gap-4 flex-wrap">
-                    {WC.words.map((w, i) => {
+                    {WC.words.map((w) => {
                         return(
-                            <p key={i} className="border px-2 rounded-md border-card-border hover:cursor-default">
-                                {w.phonemes} - {w.englishWord} 
-                                <span className="font-mono font-bold text-red-500 hover:cursor-pointer"
-                                    onClick={() => deleteWord(w.id)}
-                                >
-                                    {" x"}
-                                </span>
+                            <p key={w.id} className="flex items-center gap-1 border pl-2 pr-1 rounded-md border-card-border hover:cursor-default">
+                                {w.phonemes.join(" ")} - {w.englishWord}
+                                <DeleteButton
+                                    onDelete={() => deleteWord(w.id)}
+                                    deleting={deletingId === w.id}
+                                    label={`Delete ${w.englishWord}`}
+                                />
                             </p>
                         )
                     })}

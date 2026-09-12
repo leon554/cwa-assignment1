@@ -6,64 +6,74 @@ import PhonemeKeyboard from "../phoneme/PhonemeKeyboard";
 import { createPhonemeWord, updatePhonemeWord } from "@/service/api-service";
 import { ApiError } from "@/service/api-service";
 import LabeledSelect from "../shared/LabeledSelect";
+import ActionButton from "../shared/ActionButton";
 import { PhonemeWord } from "@/types/api-types";
 import { useWords } from "@/providers/WordsContext";
 
 
 export default function WordCreator() {
     const [englishWord, setEnglishWord] = useState("")
-    const [phonemes, setPhonemes] = useState("")
+    const [phonemes, setPhonemes] = useState<string[]>([])
     const [create, setCreate] = useState(true)
     const [selectedWord, setSelectedWord] = useState<null | PhonemeWord>(null)
+    const [saving, setSaving] = useState(false)
 
     const WC = useWords()
 
     useEffect(() => {
         if(create || !selectedWord) return
         setEnglishWord(selectedWord.englishWord)
-        setPhonemes(selectedWord.phonemes.join(""))
+        setPhonemes(selectedWord.phonemes)
 
     }, [selectedWord])
 
-    async function createWord(){
-        if(!englishWord || !phonemes){
+    function validate(){
+        if(!englishWord || phonemes.length === 0){
             alert("Both text boxes need to have values")
-            return
+            return false
         }
+        return true
+    }
 
-        WC.setLoading(true)
+    async function createWord(){
+        if(!validate()) return
+
+        setSaving(true)
         try {
             await createPhonemeWord({
                 englishWord,
-                phonemes: phonemes.split("")
+                phonemes
             })
             WC.refreshWords()
+            setEnglishWord("")
+            setPhonemes([])
         } catch (error) {
             if (error instanceof ApiError) alert(error.message);
         }
-        WC.setLoading(false)
+        setSaving(false)
     }
 
      async function updateWord(){
-        if(!englishWord || !phonemes){
-            alert("Both text boxes need to have values")
+        if(!selectedWord){
+            alert("Select a word to update")
             return
         }
+        if(!validate()) return
 
-        WC.setLoading(true)
+        setSaving(true)
         try {
             await updatePhonemeWord(
-                selectedWord!.id,
+                selectedWord.id,
                 {
-                    englishWord: englishWord, 
-                    phonemes: phonemes.split("")
+                    englishWord: englishWord,
+                    phonemes
                 }
             )
             WC.refreshWords()
         } catch (error) {
             if (error instanceof ApiError) alert(error.message);
         }
-        WC.setLoading(false)
+        setSaving(false)
     }
 
     return (
@@ -87,11 +97,14 @@ export default function WordCreator() {
                    <LabeledSelect
                         id="wordselect"
                         label="Select Word To Update"
-                        value={selectedWord ? JSON.stringify(selectedWord) : ""}
-                        onChange={(value) => setSelectedWord(JSON.parse(value))}
+                        value={selectedWord?.id ?? ""}
+                        onChange={(value) => {
+                            const word = WC.words.find(w => w.id === Number(value))
+                            setSelectedWord(word ?? null)
+                        }}
                         options={WC.words.map(w => ({
-                            value: JSON.stringify(w),
-                            label: `${w.phonemes.join("")} - ${w.englishWord}`
+                            value: w.id,
+                            label: `${w.phonemes.join(" ")} - ${w.englishWord}`
                         }))}
                     />
                     }
@@ -104,13 +117,20 @@ export default function WordCreator() {
                      <LabeledInput
                         type="text"
                         title="Phenomes"
-                        value={phonemes}
+                        value={phonemes.join(" ")}
                         setValue={v => {}}
                     />
                     <PhonemeKeyboard
-                        onKeyPress={v => setPhonemes(p => p + v)}
-                        onBackspace={() => setPhonemes(p => p.slice(0, p.length-1))}
+                        onKeyPress={v => setPhonemes(p => [...p, v])}
+                        onBackspace={() => setPhonemes(p => p.slice(0, -1))}
                         onEnter={() => create ? createWord() : updateWord()}
+                        disabled={saving}
+                    />
+                    <ActionButton
+                        onClick={() => create ? createWord() : updateWord()}
+                        label={create ? "Create Word" : "Update Word"}
+                        loading={saving}
+                        disabled={WC.wordsLoading}
                     />
                 </div>
             </div>
