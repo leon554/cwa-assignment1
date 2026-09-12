@@ -8,7 +8,7 @@ import { activityToPuzzle } from "@/lib/wordsearch/generator";
 import type { WordSearchPuzzle } from "@/lib/wordsearch/types";
 import { useWords } from "@/providers/WordsContext";
 import type { WordSearchActivity } from "@/types/api-types";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function WordSearchPageClient() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -21,6 +21,33 @@ export default function WordSearchPageClient() {
   const selectedActivity =
     WC.wordSearchActivities.find((a) => a.id === selectedId) ?? null;
 
+  // Rebuild the puzzle when the loaded activity's grid or word list changes
+  // (e.g. after an update), without requiring Load to be clicked again.
+  const puzzleSourceKey = selectedActivity
+    ? [
+        selectedActivity.id,
+        selectedActivity.wordListId,
+        selectedActivity.gridWidth,
+        selectedActivity.gridHeight,
+        selectedActivity.wordList.words
+          .map((w) => `${w.id}:${w.phonemes.join(" ")}`)
+          .join("|"),
+      ].join(":")
+    : null;
+
+  useEffect(() => {
+    if (!selectedActivity) {
+      setPuzzle(null);
+      return;
+    }
+    if (selectedActivity.wordList.words.length === 0) {
+      setPuzzle(null);
+      return;
+    }
+    setPuzzle(activityToPuzzle(selectedActivity));
+    setPuzzleKey((k) => k + 1);
+  }, [puzzleSourceKey]);
+
   function handlePuzzleChange(next: WordSearchPuzzle) {
     setPuzzle(next);
     setPuzzleKey((k) => k + 1);
@@ -28,11 +55,6 @@ export default function WordSearchPageClient() {
 
   function handleSelect(activity: WordSearchActivity) {
     setSelectedId(activity.id);
-    if (activity.wordList.words.length === 0) {
-      setPuzzle(null);
-      return;
-    }
-    handlePuzzleChange(activityToPuzzle(activity));
   }
 
   return (
