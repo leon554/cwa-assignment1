@@ -41,6 +41,15 @@ docker compose down -v
 docker compose up --build
 ```
 
+`down -v` drops the database. After the stack is up again, load the seed data from the API container:
+
+```bash
+docker compose exec api npm install
+docker compose exec api npx prisma migrate deploy --config prisma7.config.ts
+docker compose exec api npx prisma generate --config prisma7.config.ts
+docker compose exec api npm run db:seed
+```
+
 ### Running without Docker
 
 ```bash

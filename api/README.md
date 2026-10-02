@@ -68,3 +68,16 @@ npx prisma migrate deploy    # apply existing migrations (used by the Dockerfile
 npx prisma db push           # optional local shortcut to sync the schema without a migration
 npx prisma studio            # browse the data
 ```
+
+## Seed
+
+`prisma/seed.ts` loads words, word lists, Wordle and Word Search activities, generation logs, page views, and daily summaries. Running it again replaces the analytics rows and updates the named classroom records, so it is safe after `docker compose down -v` and safe to run twice.
+
+`node_modules` is a container volume. After this dependency was added, install it inside the API container, apply migrations, regenerate the client, then seed:
+
+```bash
+docker compose exec api npm install
+docker compose exec api npx prisma migrate deploy --config prisma7.config.ts
+docker compose exec api npx prisma generate --config prisma7.config.ts
+docker compose exec api npm run db:seed
+```

@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "db:seed": "prisma db seed --config prisma7.config.ts",
     "postinstall": "prisma skills sync || exit 0"
   },
   "dependencies": {
@@ -28,6 +29,7 @@
     "eslint-config-next": "16.3.3",
     "prisma": "^7.10.0",
     "tailwindcss": "^4",
+    "tsx": "^4.23.15",
     "typescript": "^5"
   }
 }
