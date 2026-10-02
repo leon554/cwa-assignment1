@@ -91,12 +91,8 @@ export async function getMostUsedActivityType(): Promise<ActivityType | null> {
   return groups[0]?.activityType ?? null;
 }
 
-export async function getRecentGenerations({
-  filters,
-  page,
-  pageSize,
-}: RecentGenerationsQuery): Promise<RecentGenerations> {
-  const where: Prisma.GenerationLogWhereInput = {
+function generationWhere(filters?: GenerationFilters): Prisma.GenerationLogWhereInput {
+  return {
     activityType: filters?.activityType,
     status: filters?.status,
     createdAt:
@@ -104,6 +100,14 @@ export async function getRecentGenerations({
         ? { gte: filters.from, lte: filters.to }
         : undefined,
   };
+}
+
+export async function getRecentGenerations({
+  filters,
+  page,
+  pageSize,
+}: RecentGenerationsQuery): Promise<RecentGenerations> {
+  const where = generationWhere(filters);
 
   const [items, total] = await Promise.all([
     prisma.generationLog.findMany({
@@ -153,6 +157,100 @@ export async function getGenerationsOverTime(): Promise<GenerationsOverTimePoint
     createdCount: group._sum.createdCount ?? 0,
     successCount: group._sum.successCount ?? 0,
     failedCount: group._sum.failedCount ?? 0,
+  }));
+}
+
+export async function getMetricsSummary() {
+  const [
+    activityCounts,
+    generationStats,
+    averageTimeOnPage,
+    mostUsedActivityType,
+    wordLists,
+    generationsOverTime,
+  ] = await Promise.all([
+    getActivityCounts(),
+    getGenerationStats(),
+    getAverageTimeOnPage(),
+    getMostUsedActivityType(),
+    getWordListSummary(),
+    getGenerationsOverTime(),
+  ]);
+
+  return {
+    activityCounts,
+    generationStats,
+    averageTimeOnPage,
+    mostUsedActivityType,
+    wordLists,
+    generationsOverTime,
+  };
+}
+
+function csvCell(value: string | number | null) {
+  const text = value == null ? "" : String(value);
+  if (/[",\n\r]/.test(text)) return `"${text.replaceAll('"', '""')}"`;
+  return text;
+}
+
+export async function exportGenerationsCsv(filters?: GenerationFilters) {
+  const logs = await prisma.generationLog.findMany({
+    where: generationWhere(filters),
+    orderBy: { createdAt: "desc" },
+  });
+
+  const header = [
+    "id",
+    "activityType",
+    "status",
+    "errorMessage",
+    "durationMs",
+    "wordId",
+    "wordListId",
+    "createdAt",
+  ];
+  const rows = logs.map((log) =>
+    [
+      log.id,
+      log.activityType,
+      log.status,
+      log.errorMessage,
+      log.durationMs,
+      log.wordId,
+      log.wordListId,
+      log.createdAt.toISOString(),
+    ]
+      .map((value) => csvCell(value))
+      .join(","),
+  );
+  return [header.join(","), ...rows].join("\n");
+}
+
+export type GenerationAlert = {
+  activityType: ActivityType;
+  errorMessage: string | null;
+  count: number;
+};
+
+export async function getAlerts(): Promise<GenerationAlert[]> {
+  const now = new Date();
+  const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  start.setUTCDate(start.getUTCDate() - 6);
+
+  const groups = await prisma.generationLog.groupBy({
+    by: ["activityType", "errorMessage"],
+    where: {
+      status: GenerationStatus.FAILED,
+      createdAt: { gte: start },
+    },
+    _count: { _all: true },
+    orderBy: { _count: { errorMessage: "desc" } },
+  });
+
+  return groups.map((group) => ({
+    activityType: group.activityType,
+    errorMessage: group.errorMessage,
+    count: group._count._all,
   }));
 }
 

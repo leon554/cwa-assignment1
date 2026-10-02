@@ -1,3 +1,4 @@
+import { ActivityType, GenerationStatus } from "@prisma/client";
 import type { RequestBody } from "./types";
 
 export interface ValidationSuccess {
@@ -211,4 +212,100 @@ export function validateGlobalSettingsUpdate(body: RequestBody): ValidationRetur
     return validationFailure("layout must be either 'comfortable' or 'compact'");
   }
   return validationSuccess();
+}
+
+export type ParsedGenerationQuery = {
+  filters: {
+    activityType?: ActivityType;
+    status?: GenerationStatus;
+    from?: Date;
+    to?: Date;
+  };
+  page: number;
+  pageSize: number;
+};
+
+export type GenerationQueryResult =
+  | { success: true; query: ParsedGenerationQuery }
+  | ValidationFailure;
+
+function parseEnumParam<T extends string>(
+  value: string | null,
+  allowed: readonly T[],
+  field: string,
+): { ok: true; value?: T } | ValidationFailure {
+  if (value === null || value.trim() === "") return { ok: true };
+  if (!allowed.includes(value as T)) {
+    return validationFailure(`${field} must be one of ${allowed.join(", ")}`);
+  }
+  return { ok: true, value: value as T };
+}
+
+function parseDateParam(
+  value: string | null,
+  field: string,
+): { ok: true; value?: Date } | ValidationFailure {
+  if (value === null || value.trim() === "") return { ok: true };
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return validationFailure(`${field} must be a valid date`);
+  }
+  return { ok: true, value: date };
+}
+
+function parsePositiveInt(
+  value: string | null,
+  field: string,
+  fallback: number,
+  max?: number,
+): { ok: true; value: number } | ValidationFailure {
+  if (value === null || value.trim() === "") return { ok: true, value: fallback };
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 1 || (max !== undefined && parsed > max)) {
+    const limit = max === undefined ? "1 or greater" : `from 1 to ${max}`;
+    return validationFailure(`${field} must be an integer ${limit}`);
+  }
+  return { ok: true, value: parsed };
+}
+
+export function parseGenerationQuery(params: URLSearchParams): GenerationQueryResult {
+  const activityType = parseEnumParam(
+    params.get("activityType"),
+    [ActivityType.WORDLE, ActivityType.WORD_SEARCH],
+    "activityType",
+  );
+  if (!("ok" in activityType)) return activityType;
+
+  const status = parseEnumParam(
+    params.get("status"),
+    [GenerationStatus.SUCCESS, GenerationStatus.FAILED],
+    "status",
+  );
+  if (!("ok" in status)) return status;
+
+  const from = parseDateParam(params.get("from"), "from");
+  if (!("ok" in from)) return from;
+
+  const to = parseDateParam(params.get("to"), "to");
+  if (!("ok" in to)) return to;
+
+  const page = parsePositiveInt(params.get("page"), "page", 1);
+  if (!("ok" in page)) return page;
+
+  const pageSize = parsePositiveInt(params.get("pageSize"), "pageSize", 20, 100);
+  if (!("ok" in pageSize)) return pageSize;
+
+  return {
+    success: true,
+    query: {
+      filters: {
+        activityType: activityType.value,
+        status: status.value,
+        from: from.value,
+        to: to.value,
+      },
+      page: page.value,
+      pageSize: pageSize.value,
+    },
+  };
 }
