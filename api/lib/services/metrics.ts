@@ -1,4 +1,4 @@
-import { ActivityType, GenerationStatus, Prisma } from "@prisma/client";
+import { ActivityAction, ActivityType, GenerationStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 export type ActivityCounts = {
@@ -154,4 +154,103 @@ export async function getGenerationsOverTime(): Promise<GenerationsOverTimePoint
     successCount: group._sum.successCount ?? 0,
     failedCount: group._sum.failedCount ?? 0,
   }));
+}
+
+const ACTIVITY_ROUTE: Record<ActivityType, string> = {
+  [ActivityType.WORDLE]: "/wordle",
+  [ActivityType.WORD_SEARCH]: "/word-search",
+};
+
+export type RecordGenerationInput = {
+  activityType: ActivityType;
+  status: GenerationStatus;
+  errorMessage?: string | null;
+  durationMs: number;
+  wordId?: number | null;
+  wordListId?: number | null;
+};
+
+export type RecordPageViewInput = {
+  route: string;
+  durationSeconds: number;
+};
+
+export type RecordActivityEventInput = {
+  activityType: ActivityType;
+  action: ActivityAction;
+};
+
+function utcDayRange(now = new Date()) {
+  const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const end = new Date(start);
+  end.setUTCDate(end.getUTCDate() + 1);
+  return { start, end };
+}
+
+export async function refreshDailySummary() {
+  const { start, end } = utcDayRange();
+  const [logGroups, viewGroups] = await Promise.all([
+    prisma.generationLog.groupBy({
+      by: ["activityType", "status"],
+      where: { createdAt: { gte: start, lt: end } },
+      _count: { _all: true },
+    }),
+    prisma.pageView.groupBy({
+      by: ["route"],
+      where: {
+        createdAt: { gte: start, lt: end },
+        route: { in: Object.values(ACTIVITY_ROUTE) },
+      },
+      _avg: { durationSeconds: true },
+    }),
+  ]);
+
+  return Promise.all(
+    [ActivityType.WORDLE, ActivityType.WORD_SEARCH].map((activityType) => {
+      const successCount =
+        logGroups.find(
+          (group) => group.activityType === activityType && group.status === GenerationStatus.SUCCESS,
+        )?._count._all ?? 0;
+      const failedCount =
+        logGroups.find(
+          (group) => group.activityType === activityType && group.status === GenerationStatus.FAILED,
+        )?._count._all ?? 0;
+      const avgTimeOnPage =
+        viewGroups.find((group) => group.route === ACTIVITY_ROUTE[activityType])?._avg.durationSeconds ?? 0;
+      const counts = {
+        createdCount: successCount + failedCount,
+        successCount,
+        failedCount,
+        avgTimeOnPage,
+      };
+
+      return prisma.dailyMetricSummary.upsert({
+        where: { date_activityType: { date: start, activityType } },
+        create: { date: start, activityType, ...counts },
+        update: counts,
+      });
+    }),
+  );
+}
+
+export async function recordGeneration(input: RecordGenerationInput) {
+  const log = await prisma.generationLog.create({
+    data: { ...input, createdAt: new Date() },
+  });
+  await refreshDailySummary();
+  return log;
+}
+
+export async function recordPageView(input: RecordPageViewInput) {
+  const view = await prisma.pageView.create({
+    data: { ...input, createdAt: new Date() },
+  });
+  await refreshDailySummary();
+  return view;
+}
+
+export async function recordActivityEvent(input: RecordActivityEventInput) {
+  return prisma.activityEvent.create({
+    data: { ...input, createdAt: new Date() },
+  });
 }
