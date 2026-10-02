@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createNextResErr, handlePrismaError, readJsonBody, status } from "@/lib/api-utils";
+import { createNextResErr, handlePrismaError, logApiError, readJsonBody, status } from "@/lib/api-utils";
 import { validateActivityEvent } from "@/lib/api/validation";
 import type { ActivityEventBody } from "@/lib/api/types";
 import { recordActivityEvent } from "@/lib/services/metrics";
@@ -21,6 +21,7 @@ export async function POST(request: Request) {
     const event = await recordActivityEvent(input);
     return NextResponse.json(event, status(201));
   } catch (error) {
+    logApiError(error, { route: "POST /api/metrics/activity-event", ids: {} });
     return handlePrismaError(error, "Activity event");
   }
 }

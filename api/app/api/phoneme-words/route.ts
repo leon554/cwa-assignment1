@@ -2,13 +2,14 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { validatePhonemeWordCreation } from "@/lib/api/validation";
 import type { PhonemeWordBody } from "@/lib/api/types";
-import { createNextResErr, handlePrismaError, readJsonBody, status } from "@/lib/api-utils";
+import { createNextResErr, handlePrismaError, logApiError, readJsonBody, status } from "@/lib/api-utils";
 
 export async function GET() {
   try {
     const words = await prisma.phonemeWord.findMany();
     return NextResponse.json(words, status());
   } catch (error) {
+    logApiError(error, { route: "GET /api/phoneme-words", ids: {} });
     return handlePrismaError(error, "Word");
   }
 }
@@ -32,6 +33,7 @@ export async function POST(request: Request) {
     });
     return NextResponse.json(word, status(201));
   } catch (error) {
+    logApiError(error, { route: "POST /api/phoneme-words", ids: {} });
     return handlePrismaError(error, "Word");
   }
 }

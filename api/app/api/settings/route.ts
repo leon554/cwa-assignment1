@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { createNextResErr, handlePrismaError, readJsonBody, status } from "@/lib/api-utils";
+import { createNextResErr, handlePrismaError, logApiError, readJsonBody, status } from "@/lib/api-utils";
 import { validateGlobalSettingsUpdate } from "@/lib/api/validation";
 
 export async function GET() {
@@ -12,6 +12,7 @@ export async function GET() {
     });
     return NextResponse.json(settings, status());
   } catch (error) {
+    logApiError(error, { route: "GET /api/settings", ids: {} });
     return handlePrismaError(error, "Settings");
   }
 }
@@ -42,6 +43,7 @@ export async function PUT(request: Request) {
     });
     return NextResponse.json(settings, status());
   } catch (error) {
+    logApiError(error, { route: "PUT /api/settings", ids: {} });
     return handlePrismaError(error, "Settings");
   }
 }

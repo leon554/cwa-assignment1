@@ -3,7 +3,7 @@ import { ActivityAction, ActivityType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { validateWordSearchCreation } from "@/lib/api/validation";
 import type { WordSearchActivityBody } from "@/lib/api/types";
-import { createNextResErr, handlePrismaError, readJsonBody, status } from "@/lib/api-utils";
+import { createNextResErr, handlePrismaError, logApiError, readJsonBody, status } from "@/lib/api-utils";
 import { recordActivityEvent } from "@/lib/services/metrics";
 
 export async function GET() {
@@ -14,6 +14,7 @@ export async function GET() {
     });
     return NextResponse.json(activities, status());
   } catch (error) {
+    logApiError(error, { route: "GET /api/word-search-activities", ids: {} });
     return handlePrismaError(error, "Word Search activity");
   }
 }
@@ -59,6 +60,7 @@ export async function POST(request: Request) {
     });
     return NextResponse.json(activity, status(201));
   } catch (error) {
+    logApiError(error, { route: "POST /api/word-search-activities", ids: { wordListId } });
     return handlePrismaError(error, "Word Search activity");
   }
 }

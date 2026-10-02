@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createNextResErr, handlePrismaError, status } from "@/lib/api-utils";
+import { createNextResErr, handlePrismaError, logApiError, status } from "@/lib/api-utils";
 import { validatePageView } from "@/lib/api/validation";
 import type { PageViewBody, RequestBody } from "@/lib/api/types";
 import { recordPageView } from "@/lib/services/metrics";
@@ -31,6 +31,7 @@ export async function POST(request: Request) {
     const view = await recordPageView(input);
     return NextResponse.json(view, status(201));
   } catch (error) {
+    logApiError(error, { route: "POST /api/metrics/page-view", ids: {} });
     return handlePrismaError(error, "Page view");
   }
 }

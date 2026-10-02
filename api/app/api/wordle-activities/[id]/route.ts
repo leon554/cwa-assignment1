@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { ActivityAction, ActivityType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { parseId, handlePrismaError, readJsonBody, status, createNextResErr } from "@/lib/api-utils";
+import { parseId, handlePrismaError, logApiError, readJsonBody, status, createNextResErr } from "@/lib/api-utils";
 import { validateWordleUpdate } from "@/lib/api/validation";
 import type { WordleActivityBody } from "@/lib/api/types";
 import { recordActivityEvent } from "@/lib/services/metrics";
@@ -26,6 +26,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
     return NextResponse.json(activity, status());
   } catch (error) {
+    logApiError(error, { route: "GET /api/wordle-activities/[id]", ids: { id } });
     return handlePrismaError(error, "Wordle activity");
   }
 }
@@ -74,6 +75,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     });
     return NextResponse.json(activity, status());
   } catch (error) {
+    logApiError(error, { route: "PUT /api/wordle-activities/[id]", ids: { id, wordId } });
     return handlePrismaError(error, "Wordle activity");
   }
 }
@@ -94,6 +96,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     });
     return NextResponse.json({ success: true }, status());
   } catch (error) {
+    logApiError(error, { route: "DELETE /api/wordle-activities/[id]", ids: { id } });
     return handlePrismaError(error, "Wordle activity");
   }
 }

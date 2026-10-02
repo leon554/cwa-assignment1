@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { ActivityAction, ActivityType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { createNextResErr, handlePrismaError, readJsonBody, status } from "@/lib/api-utils";
+import { createNextResErr, handlePrismaError, logApiError, readJsonBody, status } from "@/lib/api-utils";
 import { validateWordleCreation } from "@/lib/api/validation";
 import type { WordleActivityBody } from "@/lib/api/types";
 import { recordActivityEvent } from "@/lib/services/metrics";
@@ -14,6 +14,7 @@ export async function GET() {
     });
     return NextResponse.json(activities, status());
   } catch (error) {
+    logApiError(error, { route: "GET /api/wordle-activities", ids: {} });
     return handlePrismaError(error, "Wordle activity");
   }
 }
@@ -52,6 +53,7 @@ export async function POST(request: Request) {
     });
     return NextResponse.json(activity, status(201));
   } catch (error) {
+    logApiError(error, { route: "POST /api/wordle-activities", ids: { wordId } });
     return handlePrismaError(error, "Wordle activity");
   }
 }

@@ -7,6 +7,14 @@ export function parseId(raw: string): number | null {
   return Number.isInteger(id) && id > 0 ? id : null;
 }
 
+export function logApiError(
+  error: unknown,
+  context: { route: string; ids: Record<string, number | string | null | undefined> },
+) {
+  const message = error instanceof Error ? error.message : String(error);
+  console.error(JSON.stringify({ route: context.route, ids: context.ids, message }));
+}
+
 export function handlePrismaError(error: unknown, entityName: string) {
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
     if (error.code === "P2025") {

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { createNextResErr, handlePrismaError, readJsonBody, status } from "@/lib/api-utils";
+import { createNextResErr, handlePrismaError, logApiError, readJsonBody, status } from "@/lib/api-utils";
 import { validateGeneration } from "@/lib/api/validation";
 import type { GenerationLogBody } from "@/lib/api/types";
 import { recordGeneration } from "@/lib/services/metrics";
@@ -31,6 +31,10 @@ export async function POST(request: Request) {
     const log = await recordGeneration(input);
     return NextResponse.json(log, status(201));
   } catch (error) {
+    logApiError(error, {
+      route: "POST /api/metrics/generation",
+      ids: { wordId: input.wordId, wordListId: input.wordListId },
+    });
     return handlePrismaError(error, "Generation log");
   }
 }

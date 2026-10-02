@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { status } from "@/lib/api-utils";
+import { logApiError, status } from "@/lib/api-utils";
 
 export async function GET() {
   const uptime = process.uptime();
@@ -9,7 +9,8 @@ export async function GET() {
   try {
     await prisma.$queryRaw`SELECT 1`;
     return NextResponse.json({ status: "ok", db: "connected", uptime, timestamp }, status());
-  } catch {
+  } catch (error) {
+    logApiError(error, { route: "GET /health", ids: {} });
     return NextResponse.json(
       { status: "degraded", db: "unreachable", uptime, timestamp },
       status(503),

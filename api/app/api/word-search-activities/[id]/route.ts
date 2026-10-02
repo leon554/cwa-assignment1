@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { ActivityAction, ActivityType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { parseId, handlePrismaError, createNextResErr, readJsonBody, status } from "@/lib/api-utils";
+import { parseId, handlePrismaError, logApiError, createNextResErr, readJsonBody, status } from "@/lib/api-utils";
 import { validateWordSearchUpdate } from "@/lib/api/validation";
 import type { WordSearchActivityBody } from "@/lib/api/types";
 import { recordActivityEvent } from "@/lib/services/metrics";
@@ -26,6 +26,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
     return NextResponse.json(activity, status());
   } catch (error) {
+    logApiError(error, { route: "GET /api/word-search-activities/[id]", ids: { id } });
     return handlePrismaError(error, "Word Search activity");
   }
 }
@@ -78,6 +79,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     });
     return NextResponse.json(activity, status());
   } catch (error) {
+    logApiError(error, { route: "PUT /api/word-search-activities/[id]", ids: { id } });
     return handlePrismaError(error, "Word Search activity");
   }
 }
@@ -98,6 +100,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     });
     return NextResponse.json({ success: true }, status());
   } catch (error) {
+    logApiError(error, { route: "DELETE /api/word-search-activities/[id]", ids: { id } });
     return handlePrismaError(error, "Word Search activity");
   }
 }

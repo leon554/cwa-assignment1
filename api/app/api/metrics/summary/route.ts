@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { handlePrismaError, status } from "@/lib/api-utils";
+import { handlePrismaError, logApiError, status } from "@/lib/api-utils";
 import { getMetricsSummary } from "@/lib/services/metrics";
 
 export async function GET() {
@@ -7,6 +7,7 @@ export async function GET() {
     const summary = await getMetricsSummary();
     return NextResponse.json(summary, status());
   } catch (error) {
+    logApiError(error, { route: "GET /api/metrics/summary", ids: {} });
     return handlePrismaError(error, "Metrics summary");
   }
 }

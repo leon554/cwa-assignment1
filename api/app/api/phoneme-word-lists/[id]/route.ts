@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { parseId, handlePrismaError, readJsonBody, status, createNextResErr } from "@/lib/api-utils";
+import { parseId, handlePrismaError, logApiError, readJsonBody, status, createNextResErr } from "@/lib/api-utils";
 import { validateWordListUpdate } from "@/lib/api/validation";
 import type { WordListBody } from "@/lib/api/types";
 
@@ -24,6 +24,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
     return NextResponse.json(list, status());
   } catch (error) {
+    logApiError(error, { route: "GET /api/phoneme-word-lists/[id]", ids: { id } });
     return handlePrismaError(error, "Word list");
   }
 }
@@ -59,6 +60,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     });
     return NextResponse.json(list, status());
   } catch (error) {
+    logApiError(error, { route: "PUT /api/phoneme-word-lists/[id]", ids: { id } });
     return handlePrismaError(error, "Word list");
   }
 }
@@ -75,6 +77,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     await prisma.phonemeWordList.delete({ where: { id } });
     return NextResponse.json({ success: true }, status());
   } catch (error) {
+    logApiError(error, { route: "DELETE /api/phoneme-word-lists/[id]", ids: { id } });
     return handlePrismaError(error, "Word list");
   }
 }

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createNextResErr, handlePrismaError } from "@/lib/api-utils";
+import { createNextResErr, handlePrismaError, logApiError } from "@/lib/api-utils";
 import { parseGenerationQuery } from "@/lib/api/validation";
 import { exportGenerationsCsv } from "@/lib/services/metrics";
 
@@ -18,6 +18,7 @@ export async function GET(request: Request) {
       },
     });
   } catch (error) {
+    logApiError(error, { route: "GET /api/metrics/generations/export", ids: {} });
     return handlePrismaError(error, "Generation log");
   }
 }
