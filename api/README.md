@@ -48,10 +48,10 @@ Error responses are always `{ "error": "message" }`.
 `GET /health` runs `SELECT 1` against the database.
 
 ```json
-{ "status": "ok", "db": "connected" }
+{ "status": "ok", "db": "connected", "uptime": 12.3, "timestamp": "2026-10-02T04:29:00.000Z" }
 ```
 
-It returns `200` when the database is reachable and `503` with `{ "status": "error", "db": "unreachable" }` when it is not.
+`uptime` is the process uptime in seconds. `timestamp` is the UTC time of the check. It returns `200` when the database is reachable and `503` with `"status": "degraded"` and `"db": "unreachable"` when it is not. The failure body includes the same `uptime` and `timestamp` fields.
 
 ## Data model notes
 
