@@ -1,6 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import Footer from "@/components/layout/Footer";
 import Header from "@/components/layout/Header";
+import PageTimeTracker from "@/components/layout/PageTimeTracker";
 import "./globals.css";
 import { WordsProvider } from "@/providers/WordsContext";
 import { getGlobalSettings } from "@/service/api-service";
@@ -26,6 +27,7 @@ export default async function RootLayout({children,}: Readonly<{ children: React
     >
       <body className="flex min-h-full flex-col bg-background text-foreground">
         <Header />
+        <PageTimeTracker />
         <WordsProvider>
          <main className="flex flex-1 flex-col">{children}</main>
         </WordsProvider>

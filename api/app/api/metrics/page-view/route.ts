@@ -1,11 +1,21 @@
 import { NextResponse } from "next/server";
-import { createNextResErr, handlePrismaError, readJsonBody, status } from "@/lib/api-utils";
+import { createNextResErr, handlePrismaError, status } from "@/lib/api-utils";
 import { validatePageView } from "@/lib/api/validation";
-import type { PageViewBody } from "@/lib/api/types";
+import type { PageViewBody, RequestBody } from "@/lib/api/types";
 import { recordPageView } from "@/lib/services/metrics";
 
+function readTextBody(text: string): RequestBody | null {
+  try {
+    const body: unknown = JSON.parse(text);
+    if (body === null || typeof body !== "object" || Array.isArray(body)) return null;
+    return body as RequestBody;
+  } catch {
+    return null;
+  }
+}
+
 export async function POST(request: Request) {
-  const body = await readJsonBody(request);
+  const body = readTextBody(await request.text());
   if (body === null) {
     return createNextResErr("Request body must be valid JSON");
   }
