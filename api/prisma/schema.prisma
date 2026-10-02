@@ -6,12 +6,29 @@ datasource db {
   provider = "postgresql"
 }
 
+enum ActivityType {
+  WORDLE
+  WORD_SEARCH
+}
+
+enum GenerationStatus {
+  SUCCESS
+  FAILED
+}
+
+enum ActivityAction {
+  CREATED
+  UPDATED
+  DELETED
+}
+
 model PhonemeWord {
   id               Int                  @id @default(autoincrement())
   englishWord      String
   phonemes         String[]
   wordLists        PhonemeWordList[]
   wordleActivities WordleActivity[]
+  generationLogs   GenerationLog[]
 }
 
 model PhonemeWordList {
@@ -19,6 +36,7 @@ model PhonemeWordList {
   name                 String
   words                PhonemeWord[]
   wordSearchActivities WordSearchActivity[]
+  generationLogs       GenerationLog[]
 }
 
 model WordleActivity {
@@ -45,4 +63,39 @@ model GlobalSettings {
   id      Int    @id @default(1) 
   theme   String @default("dark")
   layout  String @default("comfortable")
+}
+
+model GenerationLog {
+  id            Int              @id @default(autoincrement())
+  activityType  ActivityType
+  status        GenerationStatus
+  errorMessage  String?
+  durationMs    Int
+  wordId        Int?
+  word          PhonemeWord?     @relation(fields: [wordId], references: [id], onDelete: SetNull)
+  wordListId    Int?
+  wordList      PhonemeWordList? @relation(fields: [wordListId], references: [id], onDelete: SetNull)
+  createdAt     DateTime         @default(now())
+
+  @@index([createdAt])
+  @@index([activityType])
+}
+
+model PageView {
+  id              Int      @id @default(autoincrement())
+  route           String
+  durationSeconds Int
+  createdAt       DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model ActivityEvent {
+  id           Int          @id @default(autoincrement())
+  activityType ActivityType
+  action       ActivityAction
+  createdAt    DateTime     @default(now())
+
+  @@index([createdAt])
+  @@index([activityType])
 }
