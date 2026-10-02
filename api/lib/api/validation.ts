@@ -88,14 +88,44 @@ export function validateWordSearchCreation(body: RequestBody): ValidationReturn 
   return validateWordSearchFields(body);
 }
 
-export function validateWordSearchUpdate(body: RequestBody): ValidationReturn {
-  if (body.name !== undefined && !isNonEmptyString(body.name)) {
-    return validationFailure("name must be a non-empty string");
+export type WordSearchUpdateData = {
+  name?: string;
+  wordListId?: number;
+  gridWidth?: number;
+  gridHeight?: number;
+};
+
+export type WordSearchUpdateResult =
+  | { success: true; data: WordSearchUpdateData }
+  | ValidationFailure;
+
+export function validateWordSearchUpdate(body: RequestBody): WordSearchUpdateResult {
+  const data: WordSearchUpdateData = {};
+  if (body.name !== undefined) {
+    if (!isNonEmptyString(body.name)) {
+      return validationFailure("name must be a non-empty string");
+    }
+    data.name = body.name;
   }
-  if (body.wordListId !== undefined && typeof body.wordListId !== "number") {
-    return validationFailure("wordListId must be a number");
+  if (body.wordListId !== undefined) {
+    if (typeof body.wordListId !== "number") {
+      return validationFailure("wordListId must be a number");
+    }
+    data.wordListId = body.wordListId;
   }
-  return validateWordSearchFields(body);
+  if (body.gridWidth !== undefined) {
+    if (typeof body.gridWidth !== "number" || body.gridWidth < 1) {
+      return validationFailure("gridWidth must be a positive number");
+    }
+    data.gridWidth = body.gridWidth;
+  }
+  if (body.gridHeight !== undefined) {
+    if (typeof body.gridHeight !== "number" || body.gridHeight < 1) {
+      return validationFailure("gridHeight must be a positive number");
+    }
+    data.gridHeight = body.gridHeight;
+  }
+  return { success: true, data };
 }
 
 function validateWordSearchFields(body: RequestBody): ValidationReturn {
@@ -200,18 +230,30 @@ export function validateActivityEvent(body: RequestBody): ValidationReturn {
   return validationSuccess();
 }
 
-export function validateGlobalSettingsUpdate(body: RequestBody): ValidationReturn {
-  if (body.theme !== undefined && body.theme !== "light" && body.theme !== "dark") {
-    return validationFailure("theme must be either 'light' or 'dark'");
+export type GlobalSettingsUpdateData = {
+  theme?: "light" | "dark";
+  layout?: "comfortable" | "compact";
+};
+
+export type GlobalSettingsUpdateResult =
+  | { success: true; data: GlobalSettingsUpdateData }
+  | ValidationFailure;
+
+export function validateGlobalSettingsUpdate(body: RequestBody): GlobalSettingsUpdateResult {
+  const data: GlobalSettingsUpdateData = {};
+  if (body.theme !== undefined) {
+    if (body.theme !== "light" && body.theme !== "dark") {
+      return validationFailure("theme must be either 'light' or 'dark'");
+    }
+    data.theme = body.theme;
   }
-  if (
-    body.layout !== undefined &&
-    body.layout !== "comfortable" &&
-    body.layout !== "compact"
-  ) {
-    return validationFailure("layout must be either 'comfortable' or 'compact'");
+  if (body.layout !== undefined) {
+    if (body.layout !== "comfortable" && body.layout !== "compact") {
+      return validationFailure("layout must be either 'comfortable' or 'compact'");
+    }
+    data.layout = body.layout;
   }
-  return validationSuccess();
+  return { success: true, data };
 }
 
 export type ParsedGenerationQuery = {

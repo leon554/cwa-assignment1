@@ -49,10 +49,12 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     return NextResponse.json(validationResult.body, validationResult.status)
   }
 
+  const { data } = validationResult;
+
   try {
-    if (body.wordListId !== undefined) {
+    if (data.wordListId !== undefined) {
       const wordList = await prisma.phonemeWordList.findUnique({
-        where: { id: body.wordListId },
+        where: { id: data.wordListId },
         include: { words: true },
       });
       if (!wordList) {
@@ -66,10 +68,10 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const activity = await prisma.wordSearchActivity.update({
       where: { id },
       data: {
-        ...(body.name !== undefined && { name: body.name.trim() }),
-        ...(body.wordListId !== undefined && { wordListId: body.wordListId }),
-        ...(body.gridWidth !== undefined && { gridWidth: body.gridWidth }),
-        ...(body.gridHeight !== undefined && { gridHeight: body.gridHeight }),
+        ...(data.name !== undefined && { name: data.name.trim() }),
+        ...(data.wordListId !== undefined && { wordListId: data.wordListId }),
+        ...(data.gridWidth !== undefined && { gridWidth: data.gridWidth }),
+        ...(data.gridHeight !== undefined && { gridHeight: data.gridHeight }),
       },
       include: { wordList: { include: { words: true } } },
     });

@@ -30,10 +30,7 @@ export async function PUT(request: Request) {
 
   // Named fields only. Spreading the raw body would let a caller push unknown
   // columns into Prisma and turn a bad request into a 500.
-  const changes = {
-    ...(body.theme !== undefined && { theme: body.theme }),
-    ...(body.layout !== undefined && { layout: body.layout }),
-  };
+  const changes = validationResult.data;
 
   try {
     const settings = await prisma.globalSettings.upsert({
