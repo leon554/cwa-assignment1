@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { 
   ApiErrorBody,
   HealthStatus, 
@@ -252,10 +253,10 @@ function metricsUrl(path: string, query?: GenerationQuery) {
   return `${API_BASE}/metrics/${path}${search ? `?${search}` : ""}`;
 }
 
-export async function getMetricsSummary(): Promise<MetricsSummary> {
+export const getMetricsSummary = cache(async (): Promise<MetricsSummary> => {
   const res = await fetch(`${API_BASE}/metrics/summary`, { cache: "no-store" });
   return handleResponse<MetricsSummary>(res);
-}
+});
 
 export async function getGenerations(query?: GenerationQuery): Promise<GenerationList> {
   const res = await fetch(metricsUrl("generations", query), { cache: "no-store" });
