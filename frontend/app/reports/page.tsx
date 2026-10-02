@@ -10,6 +10,7 @@ type ReportsSearchParams = {
   status?: string | string[];
   from?: string | string[];
   to?: string | string[];
+  page?: string | string[];
 };
 
 function first(value: string | string[] | undefined) {
@@ -27,6 +28,13 @@ function status(value: string): GenerationStatusName | undefined {
   return undefined;
 }
 
+function pageNumber(value: string) {
+  if (!/^\d+$/.test(value)) return 1;
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 1) return 1;
+  return parsed;
+}
+
 export default async function ReportsPage({
   searchParams,
 }: {
@@ -37,8 +45,9 @@ export default async function ReportsPage({
   const statusValue = first(params.status);
   const from = first(params.from);
   const to = first(params.to);
+  const page = pageNumber(first(params.page));
 
-  const query: GenerationQuery = { page: 1, pageSize: 100 };
+  const query: GenerationQuery = { page, pageSize: 100 };
   const selectedType = activityType(activityTypeValue);
   const selectedStatus = status(statusValue);
   if (selectedType) query.activityType = selectedType;
@@ -59,7 +68,16 @@ export default async function ReportsPage({
           from={from}
           to={to}
         />
-        <GenerationsTable generations={generations.items} total={generations.total} />
+        <GenerationsTable
+          generations={generations.items}
+          total={generations.total}
+          page={generations.page}
+          pageSize={generations.pageSize}
+          activityType={selectedType ?? ""}
+          status={selectedStatus ?? ""}
+          from={from}
+          to={to}
+        />
       </div>
     </div>
   );

@@ -4,9 +4,43 @@ import type { GenerationLog } from "@/types/api-types";
 type GenerationsTableProps = {
   generations: GenerationLog[];
   total: number;
+  page: number;
+  pageSize: number;
+  activityType: string;
+  status: string;
+  from: string;
+  to: string;
 };
 
-export default function GenerationsTable({ generations, total }: GenerationsTableProps) {
+function reportsHref(
+  page: number,
+  filters: { activityType: string; status: string; from: string; to: string },
+) {
+  const params = new URLSearchParams();
+  if (filters.activityType) params.set("activityType", filters.activityType);
+  if (filters.status) params.set("status", filters.status);
+  if (filters.from) params.set("from", filters.from);
+  if (filters.to) params.set("to", filters.to);
+  if (page > 1) params.set("page", String(page));
+  const search = params.toString();
+  return search ? `/reports?${search}` : "/reports";
+}
+
+export default function GenerationsTable({
+  generations,
+  total,
+  page,
+  pageSize,
+  activityType,
+  status,
+  from,
+  to,
+}: GenerationsTableProps) {
+  const filters = { activityType, status, from, to };
+  const start = total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const end = start + generations.length - 1;
+  const lastPage = Math.max(1, Math.ceil(total / pageSize));
+
   return (
     <section className="rounded-xl border border-card-border bg-card p-6 shadow-sm">
       <h3 className="mb-4 text-lg font-semibold">Generations</h3>
@@ -14,11 +48,9 @@ export default function GenerationsTable({ generations, total }: GenerationsTabl
         <p className="text-sm text-muted">There is nothing to show yet.</p>
       ) : (
         <>
-          {total > generations.length && (
-            <p className="mb-4 text-sm text-muted">
-              Showing {generations.length} of {total} matching generations.
-            </p>
-          )}
+          <p className="mb-4 text-sm text-muted">
+            Showing {start}–{end} of {total} matching generations.
+          </p>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="text-muted">
@@ -43,6 +75,20 @@ export default function GenerationsTable({ generations, total }: GenerationsTabl
               </tbody>
             </table>
           </div>
+          {(page > 1 || page < lastPage) && (
+            <nav className="mt-4 flex items-center gap-4 text-sm" aria-label="Pagination">
+              {page > 1 && (
+                <a href={reportsHref(page - 1, filters)} className="font-medium text-primary hover:underline">
+                  Previous
+                </a>
+              )}
+              {page < lastPage && (
+                <a href={reportsHref(page + 1, filters)} className="font-medium text-primary hover:underline">
+                  Next
+                </a>
+              )}
+            </nav>
+          )}
         </>
       )}
     </section>
