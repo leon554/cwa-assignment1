@@ -3,6 +3,7 @@
 import GenerateButton from "@/components/shared/GenerateButton";
 import { downloadHtmlFile, slugify } from "@/lib/html-export/download";
 import { generateWordSearchHtml } from "@/lib/html-export/wordsearch-template";
+import { trackGeneration } from "@/lib/metrics/track-generation";
 import { activityToPuzzle } from "@/lib/wordsearch/generator";
 import type { WordSearchPuzzle } from "@/lib/wordsearch/types";
 import type { WordSearchActivity } from "@/types/api-types";
@@ -22,15 +23,43 @@ export default function WordSearchBuilder({
 }: WordSearchBuilderProps) {
   const words = activity?.wordList.words ?? [];
 
+  function wordSearchError(puzzle: WordSearchPuzzle) {
+    if (!activity) return;
+    if (activity.wordList.words.length === 0) {
+      return { errorMessage: "Word list is empty" };
+    }
+    if (puzzle.solutions.length < puzzle.words.length) {
+      return {
+        errorMessage: `Word could not be placed in ${activity.gridWidth}x${activity.gridHeight} grid`,
+      };
+    }
+  }
+
   function handleRegenerate() {
     if (!activity) return;
-    onPuzzleChange(activityToPuzzle(activity));
+    trackGeneration({
+      activityType: "WORD_SEARCH",
+      wordListId: activity.wordListId,
+      run: () => {
+        const puzzle = activityToPuzzle(activity);
+        onPuzzleChange(puzzle);
+        return wordSearchError(puzzle);
+      },
+    });
   }
 
   function handleGenerate() {
     if (!activity) return;
-    const html = generateWordSearchHtml(activityToPuzzle(activity));
-    downloadHtmlFile(html, `${slugify(activity.name, "phoneme-word-search")}.html`);
+    trackGeneration({
+      activityType: "WORD_SEARCH",
+      wordListId: activity.wordListId,
+      run: () => {
+        const puzzle = activityToPuzzle(activity);
+        const html = generateWordSearchHtml(puzzle);
+        downloadHtmlFile(html, `${slugify(activity.name, "phoneme-word-search")}.html`);
+        return wordSearchError(puzzle);
+      },
+    });
   }
 
   if (!activity) {

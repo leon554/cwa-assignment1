@@ -4,6 +4,7 @@ import PhonemeWordDisplay from "@/components/phoneme/PhonemeWordDisplay";
 import GenerateButton from "@/components/shared/GenerateButton";
 import { downloadHtmlFile, slugify } from "@/lib/html-export/download";
 import { generateWordleHtml } from "@/lib/html-export/wordle-template";
+import { trackGeneration } from "@/lib/metrics/track-generation";
 import { activityToWordleConfig } from "@/lib/wordle/types";
 import type { WordleActivity } from "@/types/api-types";
 
@@ -14,9 +15,18 @@ type WordleBuilderProps = {
 export default function WordleBuilder({ activity }: WordleBuilderProps) {
   function handleGenerate() {
     if (!activity) return;
-    const config = activityToWordleConfig(activity);
-    const html = generateWordleHtml(config);
-    downloadHtmlFile(html, `${slugify(activity.name, "phoneme-wordle")}.html`);
+    trackGeneration({
+      activityType: "WORDLE",
+      wordId: activity.wordId,
+      run: () => {
+        const config = activityToWordleConfig(activity);
+        const html = generateWordleHtml(config);
+        downloadHtmlFile(html, `${slugify(activity.name, "phoneme-wordle")}.html`);
+        if (activity.word.phonemes.length === 0) {
+          return { errorMessage: "Wordle target has no phonemes" };
+        }
+      },
+    });
   }
 
   if (!activity) {
