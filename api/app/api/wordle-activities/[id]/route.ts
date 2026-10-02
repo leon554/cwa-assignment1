@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
+import { ActivityAction, ActivityType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { parseId, handlePrismaError, readJsonBody, status, createNextResErr } from "@/lib/api-utils";
 import { validateWordleUpdate } from "@/lib/api/validation";
 import type { WordleActivityBody } from "@/lib/api/types";
+import { recordActivityEvent } from "@/lib/services/metrics";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: idParam } = await params;
@@ -66,6 +68,10 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       },
       include: { word: true },
     });
+    await recordActivityEvent({
+      activityType: ActivityType.WORDLE,
+      action: ActivityAction.UPDATED,
+    });
     return NextResponse.json(activity, status());
   } catch (error) {
     return handlePrismaError(error, "Wordle activity");
@@ -82,6 +88,10 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 
   try {
     await prisma.wordleActivity.delete({ where: { id } });
+    await recordActivityEvent({
+      activityType: ActivityType.WORDLE,
+      action: ActivityAction.DELETED,
+    });
     return NextResponse.json({ success: true }, status());
   } catch (error) {
     return handlePrismaError(error, "Wordle activity");

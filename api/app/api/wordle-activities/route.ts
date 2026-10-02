@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
+import { ActivityAction, ActivityType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { createNextResErr, handlePrismaError, readJsonBody, status } from "@/lib/api-utils";
 import { validateWordleCreation } from "@/lib/api/validation";
 import type { WordleActivityBody } from "@/lib/api/types";
+import { recordActivityEvent } from "@/lib/services/metrics";
 
 export async function GET() {
   try {
@@ -43,6 +45,10 @@ export async function POST(request: Request) {
         showEnglishWord: showEnglishWord ?? null,
       },
       include: { word: true },
+    });
+    await recordActivityEvent({
+      activityType: ActivityType.WORDLE,
+      action: ActivityAction.CREATED,
     });
     return NextResponse.json(activity, status(201));
   } catch (error) {

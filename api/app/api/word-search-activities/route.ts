@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
+import { ActivityAction, ActivityType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { validateWordSearchCreation } from "@/lib/api/validation";
 import type { WordSearchActivityBody } from "@/lib/api/types";
 import { createNextResErr, handlePrismaError, readJsonBody, status } from "@/lib/api-utils";
+import { recordActivityEvent } from "@/lib/services/metrics";
 
 export async function GET() {
   try {
@@ -50,6 +52,10 @@ export async function POST(request: Request) {
         gridHeight: gridHeight ?? 15,
       },
       include: { wordList: { include: { words: true } } },
+    });
+    await recordActivityEvent({
+      activityType: ActivityType.WORD_SEARCH,
+      action: ActivityAction.CREATED,
     });
     return NextResponse.json(activity, status(201));
   } catch (error) {

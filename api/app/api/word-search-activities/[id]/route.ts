@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
+import { ActivityAction, ActivityType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { parseId, handlePrismaError, createNextResErr, readJsonBody, status } from "@/lib/api-utils";
 import { validateWordSearchUpdate } from "@/lib/api/validation";
 import type { WordSearchActivityBody } from "@/lib/api/types";
+import { recordActivityEvent } from "@/lib/services/metrics";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: idParam } = await params;
@@ -70,6 +72,10 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       },
       include: { wordList: { include: { words: true } } },
     });
+    await recordActivityEvent({
+      activityType: ActivityType.WORD_SEARCH,
+      action: ActivityAction.UPDATED,
+    });
     return NextResponse.json(activity, status());
   } catch (error) {
     return handlePrismaError(error, "Word Search activity");
@@ -86,6 +92,10 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 
   try {
     await prisma.wordSearchActivity.delete({ where: { id } });
+    await recordActivityEvent({
+      activityType: ActivityType.WORD_SEARCH,
+      action: ActivityAction.DELETED,
+    });
     return NextResponse.json({ success: true }, status());
   } catch (error) {
     return handlePrismaError(error, "Word Search activity");
