@@ -137,6 +137,68 @@ function validateWordleFields(body: RequestBody): ValidationReturn {
   return validationSuccess();
 }
 
+function isActivityType(value: unknown): boolean {
+  return value === "WORDLE" || value === "WORD_SEARCH";
+}
+
+function isNonNegativeInteger(value: unknown): value is number {
+  return typeof value === "number" && Number.isInteger(value) && value >= 0;
+}
+
+function isPositiveInteger(value: unknown): value is number {
+  return typeof value === "number" && Number.isInteger(value) && value > 0;
+}
+
+function validateOptionalId(value: unknown, field: string): ValidationReturn {
+  if (value === undefined || value === null) return validationSuccess();
+  if (!isPositiveInteger(value)) {
+    return validationFailure(`${field} must be a positive integer`);
+  }
+  return validationSuccess();
+}
+
+export function validateGeneration(body: RequestBody): ValidationReturn {
+  if (!isActivityType(body.activityType)) {
+    return validationFailure("activityType must be either 'WORDLE' or 'WORD_SEARCH'");
+  }
+  if (body.status !== "SUCCESS" && body.status !== "FAILED") {
+    return validationFailure("status must be either 'SUCCESS' or 'FAILED'");
+  }
+  if (!isNonNegativeInteger(body.durationMs)) {
+    return validationFailure("durationMs must be a non-negative integer");
+  }
+  if (
+    body.errorMessage !== undefined &&
+    body.errorMessage !== null &&
+    typeof body.errorMessage !== "string"
+  ) {
+    return validationFailure("errorMessage must be a string");
+  }
+  const wordIdResult = validateOptionalId(body.wordId, "wordId");
+  if (!wordIdResult.success) return wordIdResult;
+  return validateOptionalId(body.wordListId, "wordListId");
+}
+
+export function validatePageView(body: RequestBody): ValidationReturn {
+  if (!isNonEmptyString(body.route)) {
+    return validationFailure("route is required");
+  }
+  if (!isNonNegativeInteger(body.durationSeconds)) {
+    return validationFailure("durationSeconds must be a non-negative integer");
+  }
+  return validationSuccess();
+}
+
+export function validateActivityEvent(body: RequestBody): ValidationReturn {
+  if (!isActivityType(body.activityType)) {
+    return validationFailure("activityType must be either 'WORDLE' or 'WORD_SEARCH'");
+  }
+  if (body.action !== "CREATED" && body.action !== "UPDATED" && body.action !== "DELETED") {
+    return validationFailure("action must be either 'CREATED', 'UPDATED', or 'DELETED'");
+  }
+  return validationSuccess();
+}
+
 export function validateGlobalSettingsUpdate(body: RequestBody): ValidationReturn {
   if (body.theme !== undefined && body.theme !== "light" && body.theme !== "dark") {
     return validationFailure("theme must be either 'light' or 'dark'");
