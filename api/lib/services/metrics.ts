@@ -40,6 +40,13 @@ export type WordListSummary = {
   activityCount: number;
 };
 
+export type WordListStats = {
+  listCount: number;
+  averageWordsPerList: number;
+  mostCommonPhonemes: { phoneme: string; count: number }[];
+  distribution: { wordCount: number; listCount: number }[];
+};
+
 export type GenerationsOverTimePoint = {
   date: Date;
   activityType: ActivityType;
@@ -122,22 +129,65 @@ export async function getRecentGenerations({
   return { items, total, page, pageSize };
 }
 
-export async function getWordListSummary(): Promise<WordListSummary[]> {
+function buildWordListStats(
+  lists: { wordCount: number; words: { phonemes: string[] }[] }[],
+): WordListStats {
+  const listCount = lists.length;
+  const averageWordsPerList =
+    listCount === 0 ? 0 : lists.reduce((sum, list) => sum + list.wordCount, 0) / listCount;
+
+  const phonemeCounts = new Map<string, number>();
+  for (const list of lists) {
+    for (const word of list.words) {
+      for (const phoneme of word.phonemes) {
+        phonemeCounts.set(phoneme, (phonemeCounts.get(phoneme) ?? 0) + 1);
+      }
+    }
+  }
+
+  const mostCommonPhonemes = [...phonemeCounts.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, 5)
+    .map(([phoneme, count]) => ({ phoneme, count }));
+
+  const buckets = new Map<number, number>();
+  for (const list of lists) {
+    buckets.set(list.wordCount, (buckets.get(list.wordCount) ?? 0) + 1);
+  }
+  const distribution = [...buckets.entries()]
+    .sort((a, b) => a[0] - b[0])
+    .map(([wordCount, bucketListCount]) => ({ wordCount, listCount: bucketListCount }));
+
+  return { listCount, averageWordsPerList, mostCommonPhonemes, distribution };
+}
+
+export async function getWordListSummary(): Promise<{
+  wordLists: WordListSummary[];
+  wordListStats: WordListStats;
+}> {
   const lists = await prisma.phonemeWordList.findMany({
     orderBy: { name: "asc" },
     select: {
       id: true,
       name: true,
+      words: { select: { phonemes: true } },
       _count: { select: { words: true, wordSearchActivities: true } },
     },
   });
 
-  return lists.map((list) => ({
+  const wordLists = lists.map((list) => ({
     id: list.id,
     name: list.name,
     wordCount: list._count.words,
     activityCount: list._count.wordSearchActivities,
   }));
+
+  return {
+    wordLists,
+    wordListStats: buildWordListStats(
+      lists.map((list) => ({ wordCount: list._count.words, words: list.words })),
+    ),
+  };
 }
 
 export async function getGenerationsOverTime(): Promise<GenerationsOverTimePoint[]> {
@@ -166,7 +216,7 @@ export async function getMetricsSummary() {
     generationStats,
     averageTimeOnPage,
     mostUsedActivityType,
-    wordLists,
+    wordListReport,
     generationsOverTime,
   ] = await Promise.all([
     getActivityCounts(),
@@ -182,7 +232,8 @@ export async function getMetricsSummary() {
     generationStats,
     averageTimeOnPage,
     mostUsedActivityType,
-    wordLists,
+    wordLists: wordListReport.wordLists,
+    wordListStats: wordListReport.wordListStats,
     generationsOverTime,
   };
 }

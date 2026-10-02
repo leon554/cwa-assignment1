@@ -125,6 +125,23 @@ export interface WordListMetric {
   activityCount: number;
 }
 
+export interface PhonemeFrequency {
+  phoneme: string;
+  count: number;
+}
+
+export interface WordCountDistribution {
+  wordCount: number;
+  listCount: number;
+}
+
+export interface WordListStats {
+  listCount: number;
+  averageWordsPerList: number;
+  mostCommonPhonemes: PhonemeFrequency[];
+  distribution: WordCountDistribution[];
+}
+
 export interface GenerationsOverTimePoint {
   date: string;
   activityType: ActivityTypeName;
@@ -139,6 +156,7 @@ export interface MetricsSummary {
   averageTimeOnPage: number | null;
   mostUsedActivityType: ActivityTypeName | null;
   wordLists: WordListMetric[];
+  wordListStats: WordListStats;
   generationsOverTime: GenerationsOverTimePoint[];
 }
 

@@ -3,6 +3,7 @@ import DashboardStats from "@/components/dashboard/DashboardStats";
 import GenerationAlerts from "@/components/dashboard/GenerationAlerts";
 import GenerationsOverTime from "@/components/dashboard/GenerationsOverTime";
 import RecentGenerations from "@/components/dashboard/RecentGenerations";
+import WordListSummary from "@/components/dashboard/WordListSummary";
 import WordListUsage from "@/components/dashboard/WordListUsage";
 import { getGenerationAlerts, getGenerations, getMetricsSummary } from "@/service/api-service";
 
@@ -30,6 +31,7 @@ export default async function DashboardPage() {
         <RecentGenerations generations={generations.items} />
         <ActivityTypeUsage activityCounts={summary.activityCounts} />
         <GenerationsOverTime points={summary.generationsOverTime} />
+        <WordListSummary stats={summary.wordListStats} />
         <WordListUsage wordLists={summary.wordLists} />
       </div>
     </div>
