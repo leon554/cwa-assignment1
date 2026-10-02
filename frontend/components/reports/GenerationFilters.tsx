@@ -7,6 +7,17 @@ type GenerationFiltersProps = {
 
 const FIELD_CLASS = "w-full rounded-md border border-card-border bg-background px-3 py-2 text-sm";
 
+function exportHref({ activityType, status, from, to }: GenerationFiltersProps) {
+  const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:80";
+  const params = new URLSearchParams();
+  if (activityType) params.set("activityType", activityType);
+  if (status) params.set("status", status);
+  if (from) params.set("from", from);
+  if (to) params.set("to", to);
+  const search = params.toString();
+  return `${base}/api/metrics/generations/export${search ? `?${search}` : ""}`;
+}
+
 export default function GenerationFilters({
   activityType,
   status,
@@ -49,12 +60,20 @@ export default function GenerationFilters({
           <input id="to" name="to" type="date" defaultValue={to} className={FIELD_CLASS} />
         </div>
       </div>
-      <button
-        type="submit"
-        className="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--primary-hover)]"
-      >
-        Apply filters
-      </button>
+      <div className="mt-4 flex items-center gap-4">
+        <button
+          type="submit"
+          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--primary-hover)]"
+        >
+          Apply filters
+        </button>
+        <a
+          href={exportHref({ activityType, status, from, to })}
+          className="text-sm font-medium text-primary hover:underline"
+        >
+          Download CSV
+        </a>
+      </div>
     </form>
   );
 }
