@@ -99,3 +99,15 @@ model ActivityEvent {
   @@index([createdAt])
   @@index([activityType])
 }
+
+model DailyMetricSummary {
+  id            Int          @id @default(autoincrement())
+  date          DateTime     @db.Date
+  activityType  ActivityType
+  createdCount  Int
+  successCount  Int
+  failedCount   Int
+  avgTimeOnPage Float
+
+  @@unique([date, activityType])
+}
