@@ -1,4 +1,4 @@
-import HealthCheck from "@/components/settings/HealthCheck";
+import HealthStatus from "@/components/settings/HealthStatus";
 import SettingsForm from "@/components/settings/SettingsForm";
 
 export default async function SettingsPage() {
@@ -10,7 +10,7 @@ export default async function SettingsPage() {
       </p>
       <div className="rounded-xl border border-card-border bg-card p-6 shadow-sm">
         <SettingsForm/>
-        <HealthCheck/>
+        <HealthStatus />
       </div>
     </div>
   );
