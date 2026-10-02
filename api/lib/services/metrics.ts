@@ -283,6 +283,123 @@ export type GenerationAlert = {
   count: number;
 };
 
+export type SystemAlertCode =
+  | "EMPTY_WORD_LIST"
+  | "HIGH_FAILURE_RATE"
+  | "EMPTY_PHONEMES"
+  | "WORD_LONGER_THAN_GRID"
+  | "NO_RECENT_GENERATIONS";
+
+export type SystemAlert = {
+  code: SystemAlertCode;
+  message: string;
+  wordListId: number | null;
+  wordId: number | null;
+  activityId: number | null;
+};
+
+function systemAlert(
+  code: SystemAlertCode,
+  message: string,
+  ids: { wordListId?: number; wordId?: number; activityId?: number } = {},
+): SystemAlert {
+  return {
+    code,
+    message,
+    wordListId: ids.wordListId ?? null,
+    wordId: ids.wordId ?? null,
+    activityId: ids.activityId ?? null,
+  };
+}
+
+export async function getSystemAlerts(): Promise<SystemAlert[]> {
+  const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const [emptyLists, stats, emptyPhonemeWords, wordSearches, recentCount] = await Promise.all([
+    prisma.phonemeWordList.findMany({
+      where: { words: { none: {} } },
+      select: { id: true, name: true },
+      orderBy: { id: "asc" },
+    }),
+    getGenerationStats(),
+    prisma.phonemeWord.findMany({
+      where: {
+        phonemes: { isEmpty: true },
+        OR: [
+          { wordleActivities: { some: {} } },
+          { wordLists: { some: { wordSearchActivities: { some: {} } } } },
+        ],
+      },
+      select: { id: true, englishWord: true },
+      orderBy: { id: "asc" },
+    }),
+    prisma.wordSearchActivity.findMany({
+      orderBy: { id: "asc" },
+      select: {
+        id: true,
+        name: true,
+        gridWidth: true,
+        gridHeight: true,
+        wordList: {
+          select: {
+            words: {
+              orderBy: { id: "asc" },
+              select: { id: true, englishWord: true, phonemes: true },
+            },
+          },
+        },
+      },
+    }),
+    prisma.generationLog.count({ where: { createdAt: { gte: dayAgo } } }),
+  ]);
+
+  const alerts: SystemAlert[] = [];
+
+  for (const list of emptyLists) {
+    alerts.push(
+      systemAlert("EMPTY_WORD_LIST", `Word list "${list.name}" has no words`, { wordListId: list.id }),
+    );
+  }
+
+  if (stats.total > 0 && stats.failed / stats.total > 0.2) {
+    const percent = Math.round((stats.failed / stats.total) * 100);
+    alerts.push(
+      systemAlert(
+        "HIGH_FAILURE_RATE",
+        `Generation failure rate is ${percent}% (${stats.failed} of ${stats.total})`,
+      ),
+    );
+  }
+
+  for (const word of emptyPhonemeWords) {
+    alerts.push(
+      systemAlert(
+        "EMPTY_PHONEMES",
+        `Word "${word.englishWord}" has no phonemes and is used by an activity`,
+        { wordId: word.id },
+      ),
+    );
+  }
+
+  for (const activity of wordSearches) {
+    const limit = Math.max(activity.gridWidth, activity.gridHeight);
+    const word = activity.wordList.words.find((entry) => entry.phonemes.length > limit);
+    if (!word) continue;
+    alerts.push(
+      systemAlert(
+        "WORD_LONGER_THAN_GRID",
+        `Word Search "${activity.name}" includes "${word.englishWord}", which has ${word.phonemes.length} phonemes and the larger grid dimension is ${limit}`,
+        { activityId: activity.id, wordId: word.id },
+      ),
+    );
+  }
+
+  if (recentCount === 0) {
+    alerts.push(systemAlert("NO_RECENT_GENERATIONS", "No generations in the last 24 hours"));
+  }
+
+  return alerts;
+}
+
 export async function getAlerts(): Promise<GenerationAlert[]> {
   const now = new Date();
   const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
