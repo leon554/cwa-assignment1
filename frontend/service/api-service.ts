@@ -15,7 +15,17 @@ import {
   SuccessBody,
   WordleActivity,
   WordSearchActivity,
-  GlobalSettings
+  GlobalSettings,
+  MetricsSummary,
+  GenerationList,
+  GenerationQuery,
+  GenerationAlert,
+  GenerationLog,
+  CreateGenerationInput,
+  PageView,
+  CreatePageViewInput,
+  ActivityEvent,
+  CreateActivityEventInput,
 
 } from "@/types/api-types";
 
@@ -222,4 +232,72 @@ export async function updateGlobalSettings(
     body: JSON.stringify(input),
   });
   return handleResponse<GlobalSettings>(res);
+}
+
+function metricsQuery(query?: GenerationQuery) {
+  const params = new URLSearchParams();
+  if (!query) return params;
+  if (query.activityType) params.set("activityType", query.activityType);
+  if (query.status) params.set("status", query.status);
+  if (query.from) params.set("from", query.from);
+  if (query.to) params.set("to", query.to);
+  if (query.page !== undefined) params.set("page", String(query.page));
+  if (query.pageSize !== undefined) params.set("pageSize", String(query.pageSize));
+  return params;
+}
+
+function metricsUrl(path: string, query?: GenerationQuery) {
+  const params = metricsQuery(query);
+  const search = params.toString();
+  return `${API_BASE}/metrics/${path}${search ? `?${search}` : ""}`;
+}
+
+export async function getMetricsSummary(): Promise<MetricsSummary> {
+  const res = await fetch(`${API_BASE}/metrics/summary`, { cache: "no-store" });
+  return handleResponse<MetricsSummary>(res);
+}
+
+export async function getGenerations(query?: GenerationQuery): Promise<GenerationList> {
+  const res = await fetch(metricsUrl("generations", query), { cache: "no-store" });
+  return handleResponse<GenerationList>(res);
+}
+
+export async function getGenerationAlerts(): Promise<GenerationAlert[]> {
+  const res = await fetch(`${API_BASE}/metrics/alerts`, { cache: "no-store" });
+  return handleResponse<GenerationAlert[]>(res);
+}
+
+export async function exportGenerationsCsv(query?: GenerationQuery): Promise<string> {
+  const res = await fetch(metricsUrl("generations/export", query), { cache: "no-store" });
+  if (!res.ok) return handleResponse<string>(res);
+  return res.text();
+}
+
+export async function createGeneration(input: CreateGenerationInput): Promise<GenerationLog> {
+  const res = await fetch(`${API_BASE}/metrics/generation`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  return handleResponse<GenerationLog>(res);
+}
+
+export async function createPageView(input: CreatePageViewInput): Promise<PageView> {
+  const res = await fetch(`${API_BASE}/metrics/page-view`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  return handleResponse<PageView>(res);
+}
+
+export async function createActivityEvent(
+  input: CreateActivityEventInput
+): Promise<ActivityEvent> {
+  const res = await fetch(`${API_BASE}/metrics/activity-event`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  return handleResponse<ActivityEvent>(res);
 }

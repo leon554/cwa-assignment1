@@ -101,3 +101,109 @@ export interface UpdateGlobalSettingsInput {
   theme?: string;
   layout?: string;
 }
+
+export type ActivityTypeName = "WORDLE" | "WORD_SEARCH";
+export type GenerationStatusName = "SUCCESS" | "FAILED";
+export type ActivityActionName = "CREATED" | "UPDATED" | "DELETED";
+
+export interface ActivityCounts {
+  wordle: number;
+  wordSearch: number;
+}
+
+export interface GenerationStats {
+  total: number;
+  success: number;
+  failed: number;
+  successRate: number;
+}
+
+export interface WordListMetric {
+  id: number;
+  name: string;
+  wordCount: number;
+  activityCount: number;
+}
+
+export interface GenerationsOverTimePoint {
+  date: string;
+  activityType: ActivityTypeName;
+  createdCount: number;
+  successCount: number;
+  failedCount: number;
+}
+
+export interface MetricsSummary {
+  activityCounts: ActivityCounts;
+  generationStats: GenerationStats;
+  averageTimeOnPage: number | null;
+  mostUsedActivityType: ActivityTypeName | null;
+  wordLists: WordListMetric[];
+  generationsOverTime: GenerationsOverTimePoint[];
+}
+
+export interface GenerationLog {
+  id: number;
+  activityType: ActivityTypeName;
+  status: GenerationStatusName;
+  errorMessage: string | null;
+  durationMs: number;
+  wordId: number | null;
+  wordListId: number | null;
+  createdAt: string;
+}
+
+export interface GenerationList {
+  items: GenerationLog[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface GenerationQuery {
+  activityType?: ActivityTypeName;
+  status?: GenerationStatusName;
+  from?: string;
+  to?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface GenerationAlert {
+  activityType: ActivityTypeName;
+  errorMessage: string | null;
+  count: number;
+}
+
+export interface CreateGenerationInput {
+  activityType: ActivityTypeName;
+  status: GenerationStatusName;
+  errorMessage?: string | null;
+  durationMs: number;
+  wordId?: number | null;
+  wordListId?: number | null;
+}
+
+export interface PageView {
+  id: number;
+  route: string;
+  durationSeconds: number;
+  createdAt: string;
+}
+
+export interface CreatePageViewInput {
+  route: string;
+  durationSeconds: number;
+}
+
+export interface ActivityEvent {
+  id: number;
+  activityType: ActivityTypeName;
+  action: ActivityActionName;
+  createdAt: string;
+}
+
+export interface CreateActivityEventInput {
+  activityType: ActivityTypeName;
+  action: ActivityActionName;
+}
