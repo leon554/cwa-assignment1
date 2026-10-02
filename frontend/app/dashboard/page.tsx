@@ -1,3 +1,4 @@
+import ActivityTypeUsage from "@/components/dashboard/ActivityTypeUsage";
 import DashboardStats from "@/components/dashboard/DashboardStats";
 import GenerationAlerts from "@/components/dashboard/GenerationAlerts";
 import GenerationsOverTime from "@/components/dashboard/GenerationsOverTime";
@@ -27,6 +28,7 @@ export default async function DashboardPage() {
         />
         <GenerationAlerts alerts={alerts} />
         <RecentGenerations generations={generations.items} />
+        <ActivityTypeUsage activityCounts={summary.activityCounts} />
         <GenerationsOverTime points={summary.generationsOverTime} />
         <WordListUsage wordLists={summary.wordLists} />
       </div>
