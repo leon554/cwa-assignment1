@@ -6,6 +6,7 @@ import {
   GenerationAlertsSection,
   GenerationsOverTimeSection,
   RecentGenerationsSection,
+  SystemAlertsSection,
   WordListSummarySection,
   WordListUsageSection,
 } from "@/components/dashboard/sections";
@@ -18,6 +19,9 @@ export default function DashboardPage() {
       <h2 className="mb-2 text-2xl font-bold text-primary">Dashboard</h2>
       <p className="mb-8 text-muted">Activity counts, generation results, and recent classroom usage.</p>
       <div className="space-y-6">
+        <Suspense fallback={<SectionSkeleton section="system alerts" />}>
+          <SystemAlertsSection />
+        </Suspense>
         <Suspense fallback={<SectionSkeleton section="activity stats" />}>
           <DashboardStatsSection />
         </Suspense>

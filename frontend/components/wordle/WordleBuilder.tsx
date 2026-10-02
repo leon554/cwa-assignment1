@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import PhonemeWordDisplay from "@/components/phoneme/PhonemeWordDisplay";
+import AlertBanner from "@/components/shared/AlertBanner";
 import GenerateButton from "@/components/shared/GenerateButton";
 import { downloadHtmlFile, slugify } from "@/lib/html-export/download";
 import { generateWordleHtml } from "@/lib/html-export/wordle-template";
@@ -12,21 +14,43 @@ type WordleBuilderProps = {
   activity: WordleActivity | null;
 };
 
+function generationError(result: unknown) {
+  if (
+    result !== null &&
+    typeof result === "object" &&
+    "errorMessage" in result &&
+    typeof result.errorMessage === "string" &&
+    result.errorMessage.length > 0
+  ) {
+    return result.errorMessage;
+  }
+  return null;
+}
+
 export default function WordleBuilder({ activity }: WordleBuilderProps) {
+  const [error, setError] = useState<string | null>(null);
+
   function handleGenerate() {
     if (!activity) return;
-    trackGeneration({
-      activityType: "WORDLE",
-      wordId: activity.wordId,
-      run: () => {
-        const config = activityToWordleConfig(activity);
-        const html = generateWordleHtml(config);
-        downloadHtmlFile(html, `${slugify(activity.name, "phoneme-wordle")}.html`);
-        if (activity.word.phonemes.length === 0) {
-          return { errorMessage: "Wordle target has no phonemes" };
-        }
-      },
-    });
+    setError(null);
+    try {
+      const result = trackGeneration({
+        activityType: "WORDLE",
+        wordId: activity.wordId,
+        run: () => {
+          const config = activityToWordleConfig(activity);
+          const html = generateWordleHtml(config);
+          downloadHtmlFile(html, `${slugify(activity.name, "phoneme-wordle")}.html`);
+          if (activity.word.phonemes.length === 0) {
+            return { errorMessage: "Wordle target has no phonemes" };
+          }
+        },
+      });
+      const message = generationError(result);
+      if (message) setError(message);
+    } catch {
+      setError("HTML export failed");
+    }
   }
 
   if (!activity) {
@@ -49,6 +73,11 @@ export default function WordleBuilder({ activity }: WordleBuilderProps) {
       </h3>
 
       <p className="text-lg font-semibold">{activity.name}</p>
+
+      {activity.word.phonemes.length === 0 && (
+        <AlertBanner variant="warning">Wordle target has no phonemes.</AlertBanner>
+      )}
+      {error && <AlertBanner variant="error">{error}</AlertBanner>}
 
       <PhonemeWordDisplay
         phonemes={activity.word.phonemes}

@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import AlertBanner from "@/components/shared/AlertBanner";
 import GenerateButton from "@/components/shared/GenerateButton";
 import { downloadHtmlFile, slugify } from "@/lib/html-export/download";
 import { generateWordSearchHtml } from "@/lib/html-export/wordsearch-template";
@@ -15,12 +17,26 @@ type WordSearchBuilderProps = {
   onShowAnswersChange: (show: boolean) => void;
 };
 
+function generationError(result: unknown) {
+  if (
+    result !== null &&
+    typeof result === "object" &&
+    "errorMessage" in result &&
+    typeof result.errorMessage === "string" &&
+    result.errorMessage.length > 0
+  ) {
+    return result.errorMessage;
+  }
+  return null;
+}
+
 export default function WordSearchBuilder({
   activity,
   onPuzzleChange,
   showAnswers,
   onShowAnswersChange,
 }: WordSearchBuilderProps) {
+  const [error, setError] = useState<string | null>(null);
   const words = activity?.wordList.words ?? [];
 
   function wordSearchError(puzzle: WordSearchPuzzle) {
@@ -35,30 +51,38 @@ export default function WordSearchBuilder({
     }
   }
 
+  function runTracked(run: () => { errorMessage: string } | undefined) {
+    if (!activity) return;
+    setError(null);
+    try {
+      const result = trackGeneration({
+        activityType: "WORD_SEARCH",
+        wordListId: activity.wordListId,
+        run,
+      });
+      const message = generationError(result);
+      if (message) setError(message);
+    } catch {
+      setError("HTML export failed");
+    }
+  }
+
   function handleRegenerate() {
     if (!activity) return;
-    trackGeneration({
-      activityType: "WORD_SEARCH",
-      wordListId: activity.wordListId,
-      run: () => {
-        const puzzle = activityToPuzzle(activity);
-        onPuzzleChange(puzzle);
-        return wordSearchError(puzzle);
-      },
+    runTracked(() => {
+      const puzzle = activityToPuzzle(activity);
+      onPuzzleChange(puzzle);
+      return wordSearchError(puzzle);
     });
   }
 
   function handleGenerate() {
     if (!activity) return;
-    trackGeneration({
-      activityType: "WORD_SEARCH",
-      wordListId: activity.wordListId,
-      run: () => {
-        const puzzle = activityToPuzzle(activity);
-        const html = generateWordSearchHtml(puzzle);
-        downloadHtmlFile(html, `${slugify(activity.name, "phoneme-word-search")}.html`);
-        return wordSearchError(puzzle);
-      },
+    runTracked(() => {
+      const puzzle = activityToPuzzle(activity);
+      const html = generateWordSearchHtml(puzzle);
+      downloadHtmlFile(html, `${slugify(activity.name, "phoneme-word-search")}.html`);
+      return wordSearchError(puzzle);
     });
   }
 
@@ -83,23 +107,43 @@ export default function WordSearchBuilder({
 
       <p className="text-lg font-semibold">{activity.name}</p>
 
+      {words.length === 0 && (
+        <AlertBanner variant="warning">
+          This word list is empty, so no puzzle can be built.
+        </AlertBanner>
+      )}
+      {words
+        .filter((word) => word.phonemes.length === 0)
+        .map((word) => (
+          <AlertBanner key={`empty-${word.id}`} variant="warning">
+            Word &quot;{word.englishWord}&quot; has no phonemes.
+          </AlertBanner>
+        ))}
+      {words
+        .filter(
+          (word) =>
+            word.phonemes.length > Math.max(activity.gridWidth, activity.gridHeight),
+        )
+        .map((word) => (
+          <AlertBanner key={`long-${word.id}`} variant="warning">
+            Word &quot;{word.englishWord}&quot; has {word.phonemes.length} phonemes, which is
+            longer than the larger grid side of{" "}
+            {Math.max(activity.gridWidth, activity.gridHeight)}.
+          </AlertBanner>
+        ))}
+      {error && <AlertBanner variant="error">{error}</AlertBanner>}
+
       <div>
         <p className="mb-1 block text-sm font-medium">
           Words in {activity.wordList.name}
         </p>
         <div className="max-h-48 overflow-y-auto rounded-md border border-card-border bg-background p-2 font-mono text-sm">
-          {words.length === 0 ? (
-            <p role="alert" className="font-sans text-red-600 dark:text-red-400">
-              This word list is empty, so no puzzle can be built.
+          {words.map((w) => (
+            <p key={w.id}>
+              {w.phonemes.join(" ")}
+              <span className="ml-2 font-sans text-muted">{w.englishWord}</span>
             </p>
-          ) : (
-            words.map((w) => (
-              <p key={w.id}>
-                {w.phonemes.join(" ")}
-                <span className="ml-2 font-sans text-muted">{w.englishWord}</span>
-              </p>
-            ))
-          )}
+          ))}
         </div>
       </div>
 

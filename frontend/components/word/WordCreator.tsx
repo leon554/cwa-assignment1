@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import LabeledInput from "../shared/LabeledInput";
 import PhonemeKeyboard from "../phoneme/PhonemeKeyboard";
+import AlertBanner from "../shared/AlertBanner";
 import { createPhonemeWord, updatePhonemeWord } from "@/service/api-service";
-import { ApiError } from "@/service/api-service";
 import LabeledSelect from "../shared/LabeledSelect";
 import { PhonemeWord } from "@/types/api-types";
 import { useWords } from "@/providers/WordsContext";
@@ -16,6 +16,7 @@ export default function WordCreator() {
     const [create, setCreate] = useState(true)
     const [selectedWord, setSelectedWord] = useState<null | PhonemeWord>(null)
     const [saving, setSaving] = useState(false)
+    const [saveError, setSaveError] = useState<string | null>(null)
 
     const WC = useWords()
     const cannotUpdate = !create && WC.words.length === 0
@@ -27,15 +28,25 @@ export default function WordCreator() {
 
     }, [selectedWord])
 
+    function emptyWordMessage() {
+        const missingEnglish = !englishWord
+        const missingPhonemes = phonemes.length === 0
+        if (missingEnglish && missingPhonemes) return "Enter an English word and at least one phoneme."
+        if (missingEnglish) return "Enter an English word."
+        if (missingPhonemes) return "Add at least one phoneme."
+        return null
+    }
+
     function validate(){
-        if(!englishWord || phonemes.length === 0){
-            alert("Both text boxes need to have values")
-            return false
-        }
-        return true
+        return Boolean(englishWord) && phonemes.length > 0
+    }
+
+    function saveFailure(error: unknown) {
+        setSaveError(error instanceof Error ? error.message : "Could not save the word")
     }
 
     async function createWord(){
+        setSaveError(null)
         if(!validate()) return
 
         setSaving(true)
@@ -48,17 +59,14 @@ export default function WordCreator() {
             setEnglishWord("")
             setPhonemes([])
         } catch (error) {
-            if (error instanceof ApiError) alert(error.message);
+            saveFailure(error)
         }
         setSaving(false)
     }
 
      async function updateWord(){
-        if(!selectedWord){
-            alert("Select a word to update")
-            return
-        }
-        if(!validate()) return
+        setSaveError(null)
+        if(!selectedWord || !validate()) return
 
         setSaving(true)
         try {
@@ -71,7 +79,7 @@ export default function WordCreator() {
             )
             WC.refreshWords()
         } catch (error) {
-            if (error instanceof ApiError) alert(error.message);
+            saveFailure(error)
         }
         setSaving(false)
     }
@@ -83,6 +91,7 @@ export default function WordCreator() {
             </h3>
             <div>
                 <div className="flex flex-col gap-3">
+                    {saveError && <AlertBanner variant="error">{saveError}</AlertBanner>}
                     <LabeledSelect
                         id="update"
                         label="Create Or Update Word"
@@ -94,11 +103,17 @@ export default function WordCreator() {
                         ]}
                     />
                     {cannotUpdate ? (
-                    <p role="status" className="text-sm text-muted">
+                    <AlertBanner variant="info">
                         No words saved yet. Create one first before you can update.
-                    </p>
+                    </AlertBanner>
                     ) : (
                     <>
+                    {!create && !selectedWord && (
+                    <AlertBanner variant="warning">Select a word to update.</AlertBanner>
+                    )}
+                    {emptyWordMessage() && (
+                    <AlertBanner variant="warning">{emptyWordMessage()}</AlertBanner>
+                    )}
                     {!create &&
                    <LabeledSelect
                         id="wordselect"

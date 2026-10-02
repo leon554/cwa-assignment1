@@ -193,6 +193,21 @@ export interface GenerationAlert {
   count: number;
 }
 
+export type SystemAlertCode =
+  | "EMPTY_WORD_LIST"
+  | "HIGH_FAILURE_RATE"
+  | "EMPTY_PHONEMES"
+  | "WORD_LONGER_THAN_GRID"
+  | "NO_RECENT_GENERATIONS";
+
+export interface SystemAlert {
+  code: SystemAlertCode;
+  message: string;
+  wordListId: number | null;
+  wordId: number | null;
+  activityId: number | null;
+}
+
 export interface CreateGenerationInput {
   activityType: ActivityTypeName;
   status: GenerationStatusName;

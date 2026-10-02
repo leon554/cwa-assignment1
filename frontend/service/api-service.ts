@@ -21,6 +21,7 @@ import {
   GenerationList,
   GenerationQuery,
   GenerationAlert,
+  SystemAlert,
   GenerationLog,
   CreateGenerationInput,
   PageView,
@@ -266,6 +267,11 @@ export async function getGenerations(query?: GenerationQuery): Promise<Generatio
 export async function getGenerationAlerts(): Promise<GenerationAlert[]> {
   const res = await fetch(`${API_BASE}/metrics/alerts`, { cache: "no-store" });
   return handleResponse<GenerationAlert[]>(res);
+}
+
+export async function getSystemAlerts(): Promise<SystemAlert[]> {
+  const res = await fetch(`${API_BASE}/metrics/system-alerts`, { cache: "no-store" });
+  return handleResponse<SystemAlert[]>(res);
 }
 
 export async function exportGenerationsCsv(query?: GenerationQuery): Promise<string> {
