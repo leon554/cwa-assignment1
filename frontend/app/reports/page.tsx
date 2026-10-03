@@ -47,7 +47,7 @@ export default async function ReportsPage({
   const to = first(params.to);
   const page = pageNumber(first(params.page));
 
-  const query: GenerationQuery = { page, pageSize: 100 };
+  const query: GenerationQuery = { page, pageSize: 10 };
   const selectedType = activityType(activityTypeValue);
   const selectedStatus = status(statusValue);
   if (selectedType) query.activityType = selectedType;

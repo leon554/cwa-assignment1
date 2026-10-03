@@ -62,6 +62,7 @@ export default function WordListSummary({ stats }: WordListSummaryProps) {
                 </div>
               ))}
             </div>
+            <div className="relative h-0 overflow-hidden">
             <table className="sr-only">
               <caption>Distribution of words per list</caption>
               <thead>
@@ -79,6 +80,7 @@ export default function WordListSummary({ stats }: WordListSummaryProps) {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         </div>
       )}

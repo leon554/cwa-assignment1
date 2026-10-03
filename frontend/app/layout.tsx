@@ -22,16 +22,18 @@ export default async function RootLayout({children,}: Readonly<{ children: React
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased ${settings.theme === "dark" ? "dark" : ""}`}
+      className={`${geistSans.variable} ${geistMono.variable} min-h-full antialiased ${settings.theme === "dark" ? "dark" : ""}`}
       data-layout={settings.layout}
     >
-      <body className="flex min-h-full flex-col bg-background text-foreground">
+      <body className="flex h-dvh flex-col overflow-hidden bg-background text-foreground">
         <Header />
         <PageTimeTracker />
-        <WordsProvider>
-         <main className="flex flex-1 flex-col">{children}</main>
-        </WordsProvider>
-        <Footer />
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+          <WordsProvider>
+           <main className="flex flex-1 flex-col">{children}</main>
+          </WordsProvider>
+          <Footer />
+        </div>
       </body>
     </html>
   );

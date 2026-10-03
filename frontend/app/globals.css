@@ -64,3 +64,7 @@ html[data-layout="compact"] .builder-grid {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
+
+.date-input::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}

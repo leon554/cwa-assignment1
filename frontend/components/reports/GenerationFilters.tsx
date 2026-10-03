@@ -51,13 +51,13 @@ export default function GenerationFilters({
           <label htmlFor="from" className="mb-1 block text-sm font-medium">
             From
           </label>
-          <input id="from" name="from" type="date" defaultValue={from} className={FIELD_CLASS} />
+          <input id="from" name="from" type="date" defaultValue={from} className={`${FIELD_CLASS} date-input`} />
         </div>
         <div>
           <label htmlFor="to" className="mb-1 block text-sm font-medium">
             To
           </label>
-          <input id="to" name="to" type="date" defaultValue={to} className={FIELD_CLASS} />
+          <input id="to" name="to" type="date" defaultValue={to} className={`${FIELD_CLASS} date-input`} />
         </div>
       </div>
       <div className="mt-4 flex items-center gap-4">

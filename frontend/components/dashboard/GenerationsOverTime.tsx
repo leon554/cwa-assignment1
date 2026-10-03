@@ -73,6 +73,7 @@ export default function GenerationsOverTime({ points }: GenerationsOverTimeProps
               ))}
             </div>
           </div>
+          <div className="relative h-0 overflow-hidden">
           <table className="sr-only">
             <caption>Generations over time</caption>
             <thead>
@@ -96,6 +97,7 @@ export default function GenerationsOverTime({ points }: GenerationsOverTimeProps
               ))}
             </tbody>
           </table>
+          </div>
         </>
       )}
     </section>

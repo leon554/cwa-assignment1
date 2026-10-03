@@ -36,6 +36,7 @@ export default function ActivityTypeUsage({ activityCounts }: ActivityTypeUsageP
               </div>
             ))}
           </div>
+          <div className="relative h-0 overflow-hidden">
           <table className="sr-only">
             <caption>Activity type usage</caption>
             <thead>
@@ -53,6 +54,7 @@ export default function ActivityTypeUsage({ activityCounts }: ActivityTypeUsageP
               ))}
             </tbody>
           </table>
+          </div>
         </>
       )}
     </section>

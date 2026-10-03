@@ -35,7 +35,7 @@ export default function WordleActivityFetcher({ onSelect, selectedId }: Props) {
             <div>
                 {WC.wordleActivitiesLoading ?
                 <LoadingRow/> : WC.wordleActivities.length != 0 ?
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2 max-h-50 overflow-y-scroll scrollbar-none">
                     {WC.wordleActivities.map((a) => (
                         <div
                             key={a.id}
@@ -43,11 +43,20 @@ export default function WordleActivityFetcher({ onSelect, selectedId }: Props) {
                         >
                             <div className="flex items-center justify-between gap-2">
                                 <p className="font-semibold">{a.name}</p>
-                                <DeleteButton
-                                    onDelete={() => deleteActivity(a.id)}
-                                    deleting={deletingId === a.id}
-                                    label={`Delete ${a.name}`}
-                                />
+                                <div className="flex  items-center gap-1">
+                                    <DeleteButton
+                                        onDelete={() => deleteActivity(a.id)}
+                                        deleting={deletingId === a.id}
+                                        label={`Delete ${a.name}`}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => onSelect(a)}
+                                        className="rounded-md border border-card-border px-2 py-1 text-xs font-medium hover:bg-background"
+                                    >
+                                        {a.id === selectedId ? "Loaded" : "Load"}
+                                    </button>
+                                </div>
                             </div>
                             <p className="text-sm text-muted">
                                 {a.word.phonemes.join(" ")} - {a.word.englishWord}
@@ -56,13 +65,6 @@ export default function WordleActivityFetcher({ onSelect, selectedId }: Props) {
                                 {a.maxGuesses} guesses
                                 {a.showEnglishWord ? ", shows English word" : ""}
                             </p>
-                            <button
-                                type="button"
-                                onClick={() => onSelect(a)}
-                                className="mt-1 rounded-md border border-card-border px-2 py-1 text-xs font-medium hover:bg-background"
-                            >
-                                {a.id === selectedId ? "Loaded" : "Load"}
-                            </button>
                         </div>
                     ))}
                 </div>:

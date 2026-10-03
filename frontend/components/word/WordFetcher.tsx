@@ -31,10 +31,10 @@ export default function WordFetcher() {
             <div>
                 {WC.wordsLoading ? 
                 <LoadingRow/> : WC.words.length != 0 ? 
-                <div className="flex gap-4 flex-wrap">
+                <div className="gap-2 grid grid-cols-1 max-h-50 overflow-y-scroll scrollbar-none">
                     {WC.words.map((w) => {
                         return(
-                            <p key={w.id} className="flex items-center gap-1 border pl-2 pr-1 rounded-md border-card-border hover:cursor-default">
+                            <p key={w.id} className="flex items-center justify-between gap-1 border pl-2 pr-1 rounded-md border-card-border hover:cursor-default">
                                 {w.phonemes.join(" ")} - {w.englishWord}
                                 <DeleteButton
                                     onDelete={() => deleteWord(w.id)}

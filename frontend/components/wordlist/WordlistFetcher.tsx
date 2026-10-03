@@ -30,7 +30,7 @@ export default function WordListFetcher() {
                 {WC.wordListsLoading ? (
                 <LoadingRow/>
                 ) : WC.wordLists.length !== 0 ? (
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2 max-h-50 overflow-y-scroll scrollbar-none">
                     {WC.wordLists.map((list) => (
                     <div
                         key={list.id}

@@ -119,7 +119,7 @@ export default function WordListCreator() {
 
             <div>
             <label className="mb-1 block text-sm font-medium">Words</label>
-            <div className="flex flex-col gap-1 max-h-48 overflow-y-auto border border-card-border rounded-md p-2">
+            <div className="grid grid-cols-2 gap-1 max-h-48 overflow-y-auto scrollbar-none border border-card-border rounded-md p-2">
                 {WC.words.length === 0 ? (
                 <p className="text-sm text-muted">No words available</p>
                 ) : (
