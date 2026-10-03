@@ -272,15 +272,14 @@ Response Times Over Time shows how latency moved during the run.
 
 ### Results
 
-p95 values come from each report's Statistics table.
 
-| Stage | Requests | Throughput | Average | Max | Error % | p95 |
-| --- | --- | --- | --- | --- | --- | --- |
-| x1 | 50 | 1.9/s | 24 ms | 74 ms | 0% | TODO |
-| x10 | 500 | 16.2/s | 20 ms | 59 ms | 0% | TODO |
-| x100 | 5,000 | 163.7/s | 9 ms | 196 ms | 0% | TODO |
-| x1000 | 50,000 | 425.3/s | 1,223 ms | 5,714 ms | 0.002% (1 error) | TODO |
-| x3000 | 150,000 | 230.8/s | 11,118 ms | 84,241 ms | 10.44% (15,660 errors) | TODO |
+| Stage | Requests | Throughput | Average | Max | Error % | 
+| --- | --- | --- | --- | --- | --- | 
+| x1 | 50 | 1.9/s | 24 ms | 74 ms | 0% | 
+| x10 | 500 | 16.2/s | 20 ms | 59 ms | 0% | 
+| x100 | 5,000 | 163.7/s | 9 ms | 196 ms | 0% | 
+| x1000 | 50,000 | 425.3/s | 1,223 ms | 5,714 ms | 0.002% (1 error) | 
+| x3000 | 150,000 | 230.8/s | 11,118 ms | 84,241 ms | 10.44% (15,660 errors) |
 
 ### Analysis
 
@@ -304,5 +303,3 @@ Possible improvements: scale the frontend horizontally, cache or statically rend
 
 ### Screenshots
 
-- [x1000 statistics](docs/load-testing/x1000-statistics.png) <!-- TODO: add screenshot -->
-- [x3000 response times](docs/load-testing/x3000-response-times.png) <!-- TODO: add screenshot -->
