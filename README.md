@@ -138,3 +138,126 @@ Validation lives in [api/lib/api/validation.ts](api/lib/api/validation.ts) and e
 │   └── service/          Typed API client
 └── docker-compose.yml
 ```
+
+## Load testing with JMeter
+
+This load test hits the frontend pages and the API calls around the builder. Wordle and Word Search generation runs in the browser, so JMeter does not exercise it. The plan covers the pages and the API around that work, including `POST /api/metrics/generation`.
+
+### Prerequisites
+
+Java 8+ and JMeter 5.6.x. On macOS: `brew install jmeter`.
+
+Dev mode gives misleading numbers, so run the stack in production mode and seed the database:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build -d
+docker compose exec api npx prisma db seed
+```
+
+### What the test plan does
+
+[loadtest/phoneme-builder.jmx](loadtest/phoneme-builder.jmx) runs the requests below once per iteration. A Constant Timer waits `${__P(thinkTime,0)}` milliseconds before every request. Each sampler asserts the response code.
+
+Frontend on `${__P(host,localhost)}:${__P(frontendPort,3000)}`, expecting 200:
+
+- `GET /health`
+- `GET /word`
+- `GET /wordle`
+- `GET /word-search`
+- `GET /dashboard`
+
+API on `${__P(host,localhost)}:${__P(apiPort,80)}`:
+
+- `GET /api/phoneme-word-lists` (200). A JSON extractor stores `$[0].words[0].id` as `wordId`.
+- `POST /api/wordle-activities` (201). A JSON extractor stores `$.id` as `activityId`.
+- `GET /api/wordle-activities` (200)
+- `POST /api/metrics/generation` (201)
+- `DELETE /api/wordle-activities/${activityId}` (200)
+
+`-J` properties and their defaults in the plan:
+
+| Property | Default |
+| --- | --- |
+| `host` | `localhost` |
+| `frontendPort` | `3000` |
+| `apiPort` | `80` |
+| `threads` | `1` |
+| `rampUp` | `1` (seconds) |
+| `loops` | `1` |
+| `thinkTime` | `0` (milliseconds) |
+
+### How to run
+
+```bash
+./loadtest/run.sh
+```
+
+[loadtest/run.sh](loadtest/run.sh) runs stages `x1`, `x10`, `x100`, `x1000`, and `x3000`. Ramp-up is 5 seconds when the stage has 100 users or fewer, and 30 seconds above that. Each stage passes `-Jloops=5` and `-JthinkTime=500`. Results go to `loadtest/results/x<N>.jtl`, with the HTML report at `loadtest/results/x<N>/index.html`. A failed stage is logged and the script continues. The script also raises the open-file limit and, unless `JVM_ARGS` is already set, gives JMeter a 1g/4g heap.
+
+On Windows:
+
+```powershell
+.\loadtest\run.ps1
+```
+
+[loadtest/run.ps1](loadtest/run.ps1) runs stages `x1`, `x10`, `x100`, `x1000`, and `x10000`. It only passes `-Jthreads`, so ramp-up, loops, and think time stay at the plan defaults (1 second, 1 loop, 0 ms). It stops on the first failing stage. Output paths are the same.
+
+A single-user smoke test should report 0% errors:
+
+```bash
+cd loadtest
+jmeter -n -t phoneme-builder.jmx -Jthreads=1 -l results/smoke.jtl -e -o results/smoke
+```
+
+`loadtest/results/` and `jmeter.log` are git-ignored. Reset and reseed the database afterwards. The run writes generation logs, and a failed delete can leave Wordle activities behind.
+
+### How to read the results
+
+Open `index.html` for a stage.
+
+| Metric | Where it appears |
+| --- | --- |
+| Average response time | Statistics table, Average column |
+| 95th percentile | Statistics table, 95% Line column |
+| Error % | Statistics table, and the Errors chart |
+| Throughput (requests/second) | Statistics table, Throughput column |
+| Active threads | Active Threads Over Time |
+
+Response Times Over Time shows how latency moved during the run.
+
+### Results
+
+p95 values come from each report's Statistics table.
+
+| Stage | Requests | Throughput | Average | Max | Error % | p95 |
+| --- | --- | --- | --- | --- | --- | --- |
+| x1 | 50 | 1.9/s | 24 ms | 74 ms | 0% | TODO |
+| x10 | 500 | 16.2/s | 20 ms | 59 ms | 0% | TODO |
+| x100 | 5,000 | 163.7/s | 9 ms | 196 ms | 0% | TODO |
+| x1000 | 50,000 | 425.3/s | 1,223 ms | 5,714 ms | 0.002% (1 error) | TODO |
+| x3000 | 150,000 | 230.8/s | 11,118 ms | 84,241 ms | 10.44% (15,660 errors) | TODO |
+
+### Analysis
+
+Up to 100 users there were no errors, and responses stayed under 200 ms. Throughput at these levels is limited by the think time, not by the server.
+
+At 1,000 users, throughput plateaued at roughly 430 to 460 requests/s while active users climbed from about 720 to 1,000. Average response time rose from about 315 ms to 1.5 to 1.8 s. That suggests the saturation point on the test machine is roughly 430 requests/s, with requests queueing beyond that. There were almost no errors.
+
+At 3,000 users, throughput peaked around 430/s, then fell to roughly 130 to 270/s once all 3,000 users were active. Average response time rose to 10 to 20 s, with a maximum of 84 s. Errors came in bursts: some 30-second windows were at 14 to 53% failures, and others were at 0%. That pattern fits stalling and recovery.
+
+At x3000, the large majority of failures were `java.net.SocketException` "Connection reset" and `NoHttpResponseException` ("failed to respond") on the frontend pages (`/dashboard`, `/word-search`, `/wordle`, `/word`, `/health` on port 3000), plus the same on `GET /api/phoneme-word-lists`. About 622 iterations then also produced 400s on `POST /api/wordle-activities`, `POST /api/metrics/generation`, and `DELETE`, because the `wordId` extraction got no response and fell back to `NOT_FOUND`. Those are knock-on failures. The API container logs showed no errors, pool exhaustion, or timeouts.
+
+The evidence points to the connection layer and the server-rendered frontend rather than the database. Candidates that were not isolated: Node process saturation, Docker Desktop networking on macOS, keep-alive timeouts, and JMeter, both Next.js servers, and Postgres sharing one laptop.
+
+x10000 was attempted, but JMeter could not create more than about 4,069 threads on macOS (`pthread_create` failed, `EAGAIN`), so the top stage was set to 3,000. That is a limit of the load generator, not the application.
+
+### Limitations and improvements
+
+The run is a single machine on localhost, with no network latency, against seeded data only.
+
+Possible improvements: scale the frontend horizontally, cache or statically render pages, tune connection and keep-alive settings, and run the load generator on a separate machine.
+
+### Screenshots
+
+- [x1000 statistics](docs/load-testing/x1000-statistics.png) <!-- TODO: add screenshot -->
+- [x3000 response times](docs/load-testing/x3000-response-times.png) <!-- TODO: add screenshot -->
