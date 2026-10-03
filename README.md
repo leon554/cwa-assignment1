@@ -272,7 +272,6 @@ Response Times Over Time shows how latency moved during the run.
 
 ### Results
 
-p95 values come from each report's Statistics table.
 
 | Stage | Requests | Throughput | Average | Max | Error % | 
 | --- | --- | --- | --- | --- | --- | 
