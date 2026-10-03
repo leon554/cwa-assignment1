@@ -12,7 +12,7 @@ interface Props{
 export default function LabeledInput({type, title, value, setValue, min = 3, max = 10}: Props) {
     return (
         <div>
-            <label htmlFor="max-guesses" className="mb-1 block text-sm font-medium">
+            <label htmlFor={title} className="mb-1 block text-sm font-medium">
                 {title}
             </label>
             <input

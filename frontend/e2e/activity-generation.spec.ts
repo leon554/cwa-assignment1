@@ -1,9 +1,9 @@
 import { expect, type Page, test } from "@playwright/test";
 
 async function statValue(page: Page, label: string) {
-  const labelText = page.getByText(label, { exact: true });
-  await expect(labelText).toBeVisible();
-  const value = await labelText.locator("xpath=following-sibling::p[1]").innerText();
+  const card = page.getByRole("group", { name: label, exact: true });
+  await expect(card).toBeVisible();
+  const value = await card.getByRole("paragraph").nth(1).innerText();
   return Number(value);
 }
 
