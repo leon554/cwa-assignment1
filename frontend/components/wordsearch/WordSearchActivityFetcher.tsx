@@ -4,8 +4,7 @@ import { useState } from "react";
 import { deleteWordSearchActivity, ApiError } from "@/service/api-service";
 import { WordSearchActivity } from "@/types/api-types";
 import { useWords } from "@/providers/WordsContext";
-import DeleteButton from "../shared/DeleteButton";
-import LoadingRow from "../shared/LoadingRow";
+import SavedActivityList from "../shared/SavedActivityList";
 
 interface Props {
     onSelect: (activity: WordSearchActivity) => void;
@@ -28,47 +27,22 @@ export default function WordSearchActivityFetcher({ onSelect, selectedId }: Prop
     }
 
     return (
-        <div>
-            <h3 className="mb-2 text-sm font-semibold tracking-wide text-muted">
-                Saved Word Search Activities
-            </h3>
-            <div>
-                {WC.wordSearchActivitiesLoading ?
-                <LoadingRow/> : WC.wordSearchActivities.length != 0 ?
-                <div className="flex flex-col gap-2 max-h-50 overflow-y-scroll scrollbar-none">
-                    {WC.wordSearchActivities.map((a) => (
-                        <div
-                            key={a.id}
-                            className={`border px-2 py-1 rounded-md ${a.id === selectedId ? "border-primary" : "border-card-border"}`}
-                        >
-                            <div className="flex items-center justify-between gap-2">
-                                <p className="font-semibold">{a.name}</p>
-                                <div className="flex items-center justify-between gap-2">
-                                    <DeleteButton
-                                        onDelete={() => deleteActivity(a.id)}
-                                        deleting={deletingId === a.id}
-                                        label={`Delete ${a.name}`}
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => onSelect(a)}
-                                        className="rounded-md border border-card-border px-2 py-1 text-xs font-medium hover:bg-background"
-                                    >
-                                        {a.id === selectedId ? "Loaded" : "Load"}
-                                    </button>
-                                </div>
-                            </div>
-                            <p className="text-sm text-muted">
-                                {a.wordList.name}, {a.gridWidth} x {a.gridHeight} grid,{" "}
-                                {a.wordList.words.length} words
-                            </p>
-                        </div>
-                    ))}
-                </div>:
-                <p>
-                    No saved activities
-                </p>}
-            </div>
-        </div>
+        <SavedActivityList
+            title="Saved Word Search Activities"
+            loading={WC.wordSearchActivitiesLoading}
+            items={WC.wordSearchActivities}
+            emptyMessage="No saved activities"
+            selectedId={selectedId}
+            deletingId={deletingId}
+            onDelete={deleteActivity}
+            onSelect={onSelect}
+            actionsClassName="flex items-center justify-between gap-2"
+            details={(activity) => (
+                <p className="text-sm text-muted">
+                    {activity.wordList.name}, {activity.gridWidth} x {activity.gridHeight} grid,{" "}
+                    {activity.wordList.words.length} words
+                </p>
+            )}
+        />
     )
 }

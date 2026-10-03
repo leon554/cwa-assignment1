@@ -5,6 +5,7 @@ import { deletePhonemeWordList, ApiError } from "@/service/api-service";
 import { useWords } from "@/providers/WordsContext";
 import DeleteButton from "../shared/DeleteButton";
 import LoadingRow from "../shared/LoadingRow";
+import { scrollListClass } from "../shared/SavedActivityList";
 
 export default function WordListFetcher() {
     const WC = useWords()
@@ -30,7 +31,7 @@ export default function WordListFetcher() {
                 {WC.wordListsLoading ? (
                 <LoadingRow/>
                 ) : WC.wordLists.length !== 0 ? (
-                <div className="flex flex-col gap-2 max-h-50 overflow-y-scroll scrollbar-none">
+                <div className={`flex flex-col gap-2 ${scrollListClass}`}>
                     {WC.wordLists.map((list) => (
                     <div
                         key={list.id}

@@ -1,11 +1,11 @@
 'use client';
 
 import { useState } from "react";
-import { deletePhonemeWord } from "@/service/api-service";
-import { ApiError } from "@/service/api-service";
+import { deletePhonemeWord, ApiError } from "@/service/api-service";
 import { useWords } from "@/providers/WordsContext";
 import DeleteButton from "../shared/DeleteButton";
 import LoadingRow from "../shared/LoadingRow";
+import { scrollListClass } from "../shared/SavedActivityList";
 
 
 export default function WordFetcher() {
@@ -31,7 +31,7 @@ export default function WordFetcher() {
             <div>
                 {WC.wordsLoading ? 
                 <LoadingRow/> : WC.words.length != 0 ? 
-                <div className="gap-2 grid grid-cols-1 max-h-50 overflow-y-scroll scrollbar-none">
+                <div className={`gap-2 grid grid-cols-1 ${scrollListClass}`}>
                     {WC.words.map((w) => {
                         return(
                             <p key={w.id} className="flex items-center justify-between gap-1 border pl-2 pr-1 rounded-md border-card-border hover:cursor-default">
