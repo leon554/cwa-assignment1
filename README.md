@@ -8,23 +8,37 @@ Assessment 1 delivered the frontend builder. Assessment 2 adds the backend and d
 
 The project is split into two independent Next.js applications plus a Postgres database, orchestrated by Docker Compose.
 
-```
-frontend (Next.js, port 3000)  ->  api (Next.js route handlers, port 80)  ->  db (Postgres 16, port 5432)
-```
-
 | Service | Port | Role |
 | --- | --- | --- |
 | `frontend` | 3000 | Builder UI, previews, HTML export |
 | `api` | 80 (container 3000) | REST route handlers, validation, Prisma access |
 | `db` | 5432 | Postgres 16 |
 
-The frontend never talks to the database directly. Every read and write goes through a single typed service layer, `frontend/service/api-service.ts`, which is the only place `fetch` is called.
+A page reads and writes through the typed client, which calls an API route. The route uses Prisma, and Prisma talks to Postgres.
+
+```mermaid
+flowchart LR
+  pages[Frontend pages] --> client[api-service.ts]
+  client --> routes[API route handlers]
+  routes --> prisma[Prisma]
+  prisma --> db[Postgres]
+```
+
+`frontend/service/api-service.ts` is that typed client. The reports CSV link and the page-view beacon call the public API URL directly.
 
 ## Quick start
+
+Dev mode bind-mounts the source and runs `next dev`, so edits show up without a rebuild:
 
 ```bash
 cp .env.example .env
 docker compose up --build
+```
+
+Production mode builds each app and runs `next start`. It drops the bind mounts and keeps the same ports:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build
 ```
 
 Then open:
@@ -60,6 +74,15 @@ cd api && cp .env.example .env && npm install && npx prisma generate && npm run 
 cd frontend && cp .env.example .env && npm install && npm run dev
 ```
 
+### Tests
+
+Playwright runs on the host against the stack at http://localhost:3000. From `frontend/`, install the browsers once, then run the suite:
+
+```bash
+npx playwright install
+npm run test:e2e
+```
+
 ## Environment variables
 
 | File | Variable | Purpose |
@@ -80,6 +103,10 @@ Defined in [api/prisma/schema.prisma](api/prisma/schema.prisma).
 - **WordleActivity** — a named Wordle configuration: target word, max guesses, and whether to reveal the English word on a win. `name` defaults to `Untitled Wordle` for backfilled rows.
 - **WordSearchActivity** — a named Word Search configuration: word list plus grid width and height. `name` defaults to `Untitled Word Search` for backfilled rows.
 - **GlobalSettings** — a single row holding the theme and layout preference.
+- **GenerationLog** — one HTML-generation attempt: `ActivityType` (`WORDLE` or `WORD_SEARCH`), `GenerationStatus` (`SUCCESS` or `FAILED`), optional error message, duration, and optional word or word list.
+- **PageView** — a route and how long it stayed open, in seconds.
+- **ActivityEvent** — a create, update, or delete (`ActivityAction`: `CREATED`, `UPDATED`, `DELETED`) for a Wordle or Word Search activity.
+- **DailyMetricSummary** — one row per date and activity type, with created, success, and failed counts plus average time on page.
 
 Both activity models can be stored many times over, so a teacher can keep multiple configurations side by side.
 
@@ -99,6 +126,17 @@ All under `/api`, except the health check.
 | `GET` `POST` | `/api/word-search-activities` | List and create Word Search configurations |
 | `GET` `PUT` `DELETE` | `/api/word-search-activities/:id` | Read, update, delete a Word Search configuration |
 | `GET` `PUT` | `/api/settings` | Read and update global settings |
+| `GET` | `/api/metrics/summary` | Dashboard counts, averages, and generations over time |
+| `GET` | `/api/metrics/alerts` | Recent generation failures grouped for the dashboard |
+| `GET` | `/api/metrics/system-alerts` | Empty lists, high failure rate, empty phonemes, words longer than the grid, and no recent generations |
+| `GET` | `/api/metrics/generations` | Filterable, paginated generation history |
+| `GET` | `/api/metrics/generations/export` | The same filters as a CSV download |
+| `POST` | `/api/metrics/generation` | Record one generation attempt |
+| `POST` | `/api/metrics/page-view` | Record time spent on a route |
+| `POST` | `/api/metrics/activity-event` | Record an activity create, update, or delete |
+| `POST` | `/api/generation-logs` | Same write as `POST /api/metrics/generation`; the typed client does not call this |
+| `POST` | `/api/page-views` | Same write as `POST /api/metrics/page-view`; the typed client does not call this |
+| `POST` | `/api/activity-events` | Same write as `POST /api/metrics/activity-event`; the typed client does not call this |
 
 Validation lives in [api/lib/api/validation.ts](api/lib/api/validation.ts) and error responses are shaped by [api/lib/api-utils.ts](api/lib/api-utils.ts). Failures return `{ "error": "message" }` with a `400` for invalid input, `404` for a missing record, and `409` when a record is still referenced by an activity.
 
@@ -107,6 +145,8 @@ Validation lives in [api/lib/api/validation.ts](api/lib/api/validation.ts) and e
 | Route | Purpose |
 | --- | --- |
 | `/` | Landing page |
+| `/dashboard` | Activity counts, generation results, alerts, and word-list usage |
+| `/reports` | Filterable generation history, with pagination and a CSV download |
 | `/word` | Manage phoneme words and word lists |
 | `/wordle` | Manage Wordle activities, preview, and export HTML |
 | `/word-search` | Manage Word Search activities, preview, and export HTML |
@@ -120,6 +160,8 @@ Validation lives in [api/lib/api/validation.ts](api/lib/api/validation.ts) and e
 3. On `/wordle`, give the activity a name, pick a saved word and its settings, then save it.
 4. On `/word-search`, give the activity a name, pick a saved word list and grid size, then save it.
 5. Load a saved activity to play the live preview, then generate the downloadable HTML file.
+6. On `/dashboard`, review counts, alerts, and recent generations.
+7. On `/reports`, filter that history and download it as CSV.
 
 ## Project layout
 
@@ -131,12 +173,15 @@ Validation lives in [api/lib/api/validation.ts](api/lib/api/validation.ts) and e
 │   ├── lib/              Prisma client, validation, response helpers
 │   └── prisma/           Schema and migrations
 ├── frontend/             Builder UI
-│   ├── app/              Routes
+│   ├── app/              Routes, including dashboard and reports
 │   ├── components/       UI grouped by feature
+│   ├── e2e/              Playwright tests
 │   ├── lib/              Wordle logic, word search generator, HTML export
 │   ├── providers/        WordsProvider data layer
 │   └── service/          Typed API client
-└── docker-compose.yml
+├── loadtest/             JMeter plan and staged run scripts
+├── docker-compose.yml
+└── docker-compose.prod.yml
 ```
 
 ## Load testing with JMeter
@@ -151,7 +196,7 @@ Dev mode gives misleading numbers, so run the stack in production mode and seed 
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build -d
-docker compose exec api npx prisma db seed
+docker compose exec api npm run db:seed
 ```
 
 ### What the test plan does
