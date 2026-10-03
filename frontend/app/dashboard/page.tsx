@@ -1,4 +1,9 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
+
+export const metadata: Metadata = {
+  title: "Dashboard",
+};
 import SectionSkeleton from "@/components/dashboard/SectionSkeleton";
 import {
   ActivityTypeUsageSection,

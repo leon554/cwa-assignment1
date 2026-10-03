@@ -7,6 +7,7 @@
   --card-border: #e2e8f0;
   --primary: #2b5c8f;
   --primary-hover: #1e4366;
+  --on-primary: #ffffff;
   --muted: #64748b;
   --tile-empty: #ffffff;
   --tile-border: #cbd5e1;
@@ -22,8 +23,9 @@
   --foreground: #f1f5f9;
   --card: #1e293b;
   --card-border: #334155;
-  --primary: #3b82f6;
-  --primary-hover: #2563eb;
+  --primary: #93c5fd;
+  --primary-hover: #60a5fa;
+  --on-primary: #0f172a;
   --muted: #94a3b8;
   --tile-empty: #1e293b;
   --tile-border: #475569;
@@ -41,6 +43,7 @@
   --color-card-border: var(--card-border);
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
+  --color-on-primary: var(--on-primary);
   --color-muted: var(--muted);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);

@@ -1,7 +1,12 @@
+import type { Metadata } from "next";
 import GenerationFilters from "@/components/reports/GenerationFilters";
 import GenerationsTable from "@/components/reports/GenerationsTable";
 import { getGenerations } from "@/service/api-service";
 import type { ActivityTypeName, GenerationQuery, GenerationStatusName } from "@/types/api-types";
+
+export const metadata: Metadata = {
+  title: "Reports",
+};
 
 export const dynamic = "force-dynamic";
 

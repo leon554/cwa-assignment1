@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Footer from "@/components/layout/Footer";
 import Header from "@/components/layout/Header";
@@ -15,6 +16,13 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
+
+export const metadata: Metadata = {
+  title: {
+    default: "HCE Phoneme Activity Builder",
+    template: "%s · HCE Phoneme Activity Builder",
+  },
+};
 
 export default async function RootLayout({children,}: Readonly<{ children: React.ReactNode;}>) {
   const settings = await getGlobalSettings();

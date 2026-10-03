@@ -38,7 +38,7 @@ export default function PhonemeKeyboard({onKeyPress, onBackspace, onEnter, keySt
                 type="button"
                 onClick={onEnter}
                 disabled={disabled || enterLoading}
-                className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-50"
+                className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-on-primary hover:bg-primary-hover disabled:opacity-50"
               >
                 {enterLoading && <Spinner size={15} />}
                 {enterLoading ? "Saving..." : "Enter"}

@@ -63,7 +63,7 @@ export default function GenerationFilters({
       <div className="mt-4 flex items-center gap-4">
         <button
           type="submit"
-          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--primary-hover)]"
+          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-on-primary transition-colors hover:bg-[var(--primary-hover)]"
         >
           Apply filters
         </button>

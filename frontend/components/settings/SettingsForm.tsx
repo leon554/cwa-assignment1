@@ -40,7 +40,7 @@ export default function SettingsForm() {
               aria-pressed={theme === option}
               className={`flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-medium capitalize transition-colors disabled:cursor-not-allowed ${
                 theme === option
-                  ? "border-primary bg-primary text-white"
+                  ? "border-primary bg-primary text-on-primary"
                   : "border-card-border bg-card hover:bg-background"
               }`}
             >
@@ -62,7 +62,7 @@ export default function SettingsForm() {
               aria-pressed={layout === option}
               className={`flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-medium capitalize transition-colors disabled:cursor-not-allowed ${
                 layout === option
-                  ? "border-primary bg-primary text-white"
+                  ? "border-primary bg-primary text-on-primary"
                   : "border-card-border bg-card hover:bg-background"
               }`}
             >

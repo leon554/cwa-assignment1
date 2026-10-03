@@ -1,4 +1,9 @@
+import type { Metadata } from "next";
 import HealthStatus from "@/components/settings/HealthStatus";
+
+export const metadata: Metadata = {
+  title: "Settings",
+};
 import SettingsForm from "@/components/settings/SettingsForm";
 
 export default async function SettingsPage() {
